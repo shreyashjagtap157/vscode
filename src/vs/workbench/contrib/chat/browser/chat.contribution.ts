@@ -37,6 +37,9 @@ import { IEditorService } from '../../../services/editor/common/editorService.js
 import { IEditorResolverService, RegisteredEditorPriority } from '../../../services/editor/common/editorResolverService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { IViewsService } from '../../../services/views/common/viewsService.js';
+import { IAgentProfileManager, ICouncilOrchestrator, IConsensusManager, AgentProfileManager, CouncilOrchestrator, ConsensusManager } from '../common/council/council.js';
+import { COUNCIL_CONFIGURATION } from '../common/council/councilConfiguration.js';
+import { CouncilChatParticipant } from '../common/council/councilParticipant.js';
 import { AddConfigurationType, AssistedTypes } from '../../mcp/browser/mcpCommandsAddConfiguration.js';
 import { allDiscoverySources, discoverySourceSettingsLabel, McpCollisionBehavior, mcpDiscoverySection, mcpServerCollisionBehaviorSection, mcpServerSamplingSection } from '../../mcp/common/mcpConfiguration.js';
 import { ChatAgentNameService, ChatAgentService, IChatAgentNameService, IChatAgentService } from '../common/participants/chatAgents.js';
@@ -1725,6 +1728,43 @@ configurationRegistry.registerConfiguration({
 				mode: 'auto'
 			}
 		},
+
+		// Agent Council Configuration
+		[COUNCIL_CONFIGURATION.Enabled]: {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.enabled', "Enable the Agent Council system for multi-agent orchestration."),
+			tags: ['experimental']
+		},
+		[COUNCIL_CONFIGURATION.DefaultStrategy]: {
+			type: 'string',
+			enum: ['evidence-weighted', 'majority', 'specialist-priority', 'coordinator-override'],
+			default: 'evidence-weighted',
+			description: nls.localize('council.defaultStrategy', "Default consensus strategy for the Agent Council.")
+		},
+		[COUNCIL_CONFIGURATION.MaxIterations]: {
+			type: 'number',
+			default: 3,
+			minimum: 1,
+			maximum: 10,
+			description: nls.localize('council.maxIterations', "Maximum number of review iterations per council session.")
+		},
+		[COUNCIL_CONFIGURATION.EnableDebateView]: {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.enableDebateView', "Show the debate view to visualize agent disagreements and resolutions.")
+		},
+		[COUNCIL_CONFIGURATION.AutoActivate]: {
+			type: 'boolean',
+			default: false,
+			description: nls.localize('council.autoActivate', "Automatically activate the council for requests matching keywords.")
+		},
+		[COUNCIL_CONFIGURATION.AutoActivateKeywords]: {
+			type: 'array',
+			items: { type: 'string' },
+			default: ['architecture', 'refactor', 'security', 'design', 'review', 'complex', 'multi-file'],
+			description: nls.localize('council.autoActivateKeywords', "Keywords that trigger automatic council activation when auto-activate is enabled.")
+		}
 	}
 });
 Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane(
@@ -2328,6 +2368,19 @@ registerWorkbenchContribution2(ChatRepoInfoContribution.ID, ChatRepoInfoContribu
 registerWorkbenchContribution2(AgentPluginRecommendations.ID, AgentPluginRecommendations, WorkbenchPhase.Eventually);
 registerWorkbenchContribution2(PluginAutoUpdate.ID, PluginAutoUpdate, WorkbenchPhase.Eventually);
 
+// Agent Council Participant Registration
+class CouncilParticipantContribution extends Disposable implements IWorkbenchContribution {
+	static readonly ID = 'workbench.contrib.councilParticipant';
+
+	constructor(
+		@IInstantiationService instantiationService: IInstantiationService
+	) {
+		super();
+		this._register(instantiationService.createInstance(CouncilChatParticipant));
+	}
+}
+registerWorkbenchContribution2(CouncilParticipantContribution.ID, CouncilParticipantContribution, WorkbenchPhase.AfterRestored);
+
 registerChatActions();
 registerChatAccessibilityActions();
 registerChatCopyActions();
@@ -2404,5 +2457,10 @@ registerSingleton(IPlanReviewFeedbackService, PlanReviewFeedbackService, Instant
 registerSingleton(IChatTipService, ChatTipService, InstantiationType.Delayed);
 registerSingleton(IChatDebugService, ChatDebugServiceImpl, InstantiationType.Delayed);
 registerSingleton(IChatImageCarouselService, ChatImageCarouselService, InstantiationType.Delayed);
+
+// Agent Council System
+registerSingleton(IAgentProfileManager, AgentProfileManager, InstantiationType.Delayed);
+registerSingleton(ICouncilOrchestrator, CouncilOrchestrator, InstantiationType.Delayed);
+registerSingleton(IConsensusManager, ConsensusManager, InstantiationType.Delayed);
 
 ChatWidget.CONTRIBS.push(ChatDynamicVariableModel);
