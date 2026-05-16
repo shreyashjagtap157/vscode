@@ -12,3 +12,7 @@ export * from './evidenceValidator.js';
 export * from './advancedConsensusEngine.js';
 export * from './debateResolver.js';
 export * from './councilTestRunner.js';
+export * from './councilMCPIntegration.js';
+export * from './redTeamAgent.js';
+export * from './councilCIRunner.js';
+export * from './councilMemoryGraph.js';

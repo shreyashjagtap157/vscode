@@ -12,6 +12,10 @@ import { IEvidenceValidator, EvidenceValidator } from './evidenceValidator.js';
 import { IAdvancedConsensusEngine, AdvancedConsensusEngine } from './advancedConsensusEngine.js';
 import { IDebateResolver, DebateResolver } from './debateResolver.js';
 import { ICouncilTestRunner, CouncilTestRunner } from './councilTestRunner.js';
+import { ICouncilMCPIntegration, CouncilMCPIntegration } from './councilMCPIntegration.js';
+import { IRedTeamAgent, RedTeamAgent } from './redTeamAgent.js';
+import { ICouncilCIRunner, CouncilCIRunner } from './councilCIRunner.js';
+import { ICouncilMemoryGraph, CouncilMemoryGraph } from './councilMemoryGraph.js';
 
 registerSingleton(IAgentProfileManager, AgentProfileManager, InstantiationType.Delayed);
 registerSingleton(ICouncilOrchestrator, CouncilOrchestrator, InstantiationType.Delayed);
@@ -20,3 +24,7 @@ registerSingleton(IEvidenceValidator, EvidenceValidator, InstantiationType.Delay
 registerSingleton(IAdvancedConsensusEngine, AdvancedConsensusEngine, InstantiationType.Delayed);
 registerSingleton(IDebateResolver, DebateResolver, InstantiationType.Delayed);
 registerSingleton(ICouncilTestRunner, CouncilTestRunner, InstantiationType.Delayed);
+registerSingleton(ICouncilMCPIntegration, CouncilMCPIntegration, InstantiationType.Delayed);
+registerSingleton(IRedTeamAgent, RedTeamAgent, InstantiationType.Delayed);
+registerSingleton(ICouncilCIRunner, CouncilCIRunner, InstantiationType.Delayed);
+registerSingleton(ICouncilMemoryGraph, CouncilMemoryGraph, InstantiationType.Delayed);
