@@ -37,9 +37,14 @@ import { IEditorService } from '../../../services/editor/common/editorService.js
 import { IEditorResolverService, RegisteredEditorPriority } from '../../../services/editor/common/editorResolverService.js';
 import { IPathService } from '../../../services/path/common/pathService.js';
 import { IViewsService } from '../../../services/views/common/viewsService.js';
-import { IAgentProfileManager, ICouncilOrchestrator, IConsensusManager, AgentProfileManager, CouncilOrchestrator, ConsensusManager } from '../common/council/council.js';
-import { COUNCIL_CONFIGURATION } from '../common/council/councilConfiguration.js';
+import { IAgentProfileManager, ICouncilOrchestrator, IConsensusManager, AgentProfileManager, CouncilOrchestrator, ConsensusManager, COUNCIL_CONFIGURATION } from '../common/council/council.js';
+import { IEvidenceValidator, EvidenceValidator } from '../common/council/evidenceValidator.js';
+import { IAdvancedConsensusEngine, AdvancedConsensusEngine } from '../common/council/advancedConsensusEngine.js';
+import { IDebateResolver, DebateResolver } from '../common/council/debateResolver.js';
+import { ICouncilTestRunner, CouncilTestRunner } from '../common/council/councilTestRunner.js';
+import { ICouncilSessionManager, CouncilSessionManager } from '../common/council/councilSessionManager.js';
 import { CouncilChatParticipant } from '../common/council/councilParticipant.js';
+import { CouncilDashboardView, COUNCIL_DASHBOARD_VIEW_ID } from './councilDashboardView.js';
 import { AddConfigurationType, AssistedTypes } from '../../mcp/browser/mcpCommandsAddConfiguration.js';
 import { allDiscoverySources, discoverySourceSettingsLabel, McpCollisionBehavior, mcpDiscoverySection, mcpServerCollisionBehaviorSection, mcpServerSamplingSection } from '../../mcp/common/mcpConfiguration.js';
 import { ChatAgentNameService, ChatAgentService, IChatAgentNameService, IChatAgentService } from '../common/participants/chatAgents.js';
@@ -2462,5 +2467,27 @@ registerSingleton(IChatImageCarouselService, ChatImageCarouselService, Instantia
 registerSingleton(IAgentProfileManager, AgentProfileManager, InstantiationType.Delayed);
 registerSingleton(ICouncilOrchestrator, CouncilOrchestrator, InstantiationType.Delayed);
 registerSingleton(IConsensusManager, ConsensusManager, InstantiationType.Delayed);
+registerSingleton(IEvidenceValidator, EvidenceValidator, InstantiationType.Delayed);
+registerSingleton(IAdvancedConsensusEngine, AdvancedConsensusEngine, InstantiationType.Delayed);
+registerSingleton(IDebateResolver, DebateResolver, InstantiationType.Delayed);
+registerSingleton(ICouncilTestRunner, CouncilTestRunner, InstantiationType.Delayed);
+registerSingleton(ICouncilSessionManager, CouncilSessionManager, InstantiationType.Delayed);
+
+// Agent Council Dashboard View
+class CouncilDashboardViewContribution extends Disposable implements IWorkbenchContribution {
+	static readonly ID = 'workbench.contrib.councilDashboardView';
+
+	constructor(
+		@IInstantiationService instantiationService: IInstantiationService
+	) {
+		super();
+		this._register(instantiationService.createInstance(CouncilDashboardView, {
+			id: COUNCIL_DASHBOARD_VIEW_ID,
+			name: 'Agent Council Dashboard',
+			title: 'Agent Council'
+		} as any));
+	}
+}
+registerWorkbenchContribution2(CouncilDashboardViewContribution.ID, CouncilDashboardViewContribution, WorkbenchPhase.AfterRestored);
 
 ChatWidget.CONTRIBS.push(ChatDynamicVariableModel);
