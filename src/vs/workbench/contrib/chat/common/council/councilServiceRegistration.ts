@@ -35,6 +35,12 @@ import { ICouncilSessionReplay, CouncilSessionReplay } from './councilSessionRep
 import { ICouncilDiffView, CouncilDiffView } from './councilDiffView.js';
 import { ICouncilLearningEngine, CouncilLearningEngine } from './councilLearningEngine.js';
 import { ICouncilAutoPR, CouncilAutoPR } from './councilAutoPR.js';
+import { ICouncilLazyLoader, CouncilLazyLoader } from './councilLazyLoader.js';
+import { ICouncilRateLimiter, CouncilRateLimiter } from './councilRateLimiter.js';
+import { ICouncilKeybindings, CouncilKeybindings } from './councilKeybindings.js';
+import { ICouncilSearchFilter, CouncilSearchFilter } from './councilSearchFilter.js';
+import { ICouncilCredentialManager, CouncilCredentialManager } from './councilCredentialManager.js';
+import { ICouncilDataRetention, CouncilDataRetention } from './councilDataRetention.js';
 
 registerSingleton(IAgentProfileManager, AgentProfileManager, InstantiationType.Delayed);
 registerSingleton(ICouncilOrchestrator, CouncilOrchestrator, InstantiationType.Delayed);
@@ -66,3 +72,9 @@ registerSingleton(ICouncilSessionReplay, CouncilSessionReplay, InstantiationType
 registerSingleton(ICouncilDiffView, CouncilDiffView, InstantiationType.Delayed);
 registerSingleton(ICouncilLearningEngine, CouncilLearningEngine, InstantiationType.Delayed);
 registerSingleton(ICouncilAutoPR, CouncilAutoPR, InstantiationType.Delayed);
+registerSingleton(ICouncilLazyLoader, CouncilLazyLoader, InstantiationType.Delayed);
+registerSingleton(ICouncilRateLimiter, CouncilRateLimiter, InstantiationType.Delayed);
+registerSingleton(ICouncilKeybindings, CouncilKeybindings, InstantiationType.Delayed);
+registerSingleton(ICouncilSearchFilter, CouncilSearchFilter, InstantiationType.Delayed);
+registerSingleton(ICouncilCredentialManager, CouncilCredentialManager, InstantiationType.Delayed);
+registerSingleton(ICouncilDataRetention, CouncilDataRetention, InstantiationType.Delayed);

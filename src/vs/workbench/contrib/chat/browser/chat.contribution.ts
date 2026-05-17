@@ -66,6 +66,12 @@ import { ICouncilSessionReplay, CouncilSessionReplay } from '../common/council/c
 import { ICouncilDiffView, CouncilDiffView } from '../common/council/councilDiffView.js';
 import { ICouncilLearningEngine, CouncilLearningEngine } from '../common/council/councilLearningEngine.js';
 import { ICouncilAutoPR, CouncilAutoPR } from '../common/council/councilAutoPR.js';
+import { ICouncilLazyLoader, CouncilLazyLoader } from '../common/council/councilLazyLoader.js';
+import { ICouncilRateLimiter, CouncilRateLimiter } from '../common/council/councilRateLimiter.js';
+import { ICouncilKeybindings, CouncilKeybindings } from '../common/council/councilKeybindings.js';
+import { ICouncilSearchFilter, CouncilSearchFilter } from '../common/council/councilSearchFilter.js';
+import { ICouncilCredentialManager, CouncilCredentialManager } from '../common/council/councilCredentialManager.js';
+import { ICouncilDataRetention, CouncilDataRetention } from '../common/council/councilDataRetention.js';
 import { CouncilChatParticipant } from '../common/council/councilParticipant.js';
 import { CouncilDashboardView, COUNCIL_DASHBOARD_VIEW_ID } from './councilDashboardView.js';
 import { AddConfigurationType, AssistedTypes } from '../../mcp/browser/mcpCommandsAddConfiguration.js';
@@ -2518,6 +2524,12 @@ registerSingleton(ICouncilSessionReplay, CouncilSessionReplay, InstantiationType
 registerSingleton(ICouncilDiffView, CouncilDiffView, InstantiationType.Delayed);
 registerSingleton(ICouncilLearningEngine, CouncilLearningEngine, InstantiationType.Delayed);
 registerSingleton(ICouncilAutoPR, CouncilAutoPR, InstantiationType.Delayed);
+registerSingleton(ICouncilLazyLoader, CouncilLazyLoader, InstantiationType.Delayed);
+registerSingleton(ICouncilRateLimiter, CouncilRateLimiter, InstantiationType.Delayed);
+registerSingleton(ICouncilKeybindings, CouncilKeybindings, InstantiationType.Delayed);
+registerSingleton(ICouncilSearchFilter, CouncilSearchFilter, InstantiationType.Delayed);
+registerSingleton(ICouncilCredentialManager, CouncilCredentialManager, InstantiationType.Delayed);
+registerSingleton(ICouncilDataRetention, CouncilDataRetention, InstantiationType.Delayed);
 
 // Agent Council Dashboard View
 class CouncilDashboardViewContribution extends Disposable implements IWorkbenchContribution {
