@@ -47,6 +47,10 @@ import { ICouncilMCPIntegration, CouncilMCPIntegration } from '../common/council
 import { IRedTeamAgent, RedTeamAgent } from '../common/council/redTeamAgent.js';
 import { ICouncilCIRunner, CouncilCIRunner } from '../common/council/councilCIRunner.js';
 import { ICouncilMemoryGraph, CouncilMemoryGraph } from '../common/council/councilMemoryGraph.js';
+import { ICouncilPolicyEngine, CouncilPolicyEngine } from '../common/council/councilPolicies.js';
+import { ICouncilPRReviewBoard, CouncilPRReviewBoard } from '../common/council/councilPRReview.js';
+import { ICouncilGovernance, CouncilGovernance } from '../common/council/councilGovernance.js';
+import { ICouncilEnterprise, CouncilEnterprise } from '../common/council/councilEnterprise.js';
 import { CouncilChatParticipant } from '../common/council/councilParticipant.js';
 import { CouncilDashboardView, COUNCIL_DASHBOARD_VIEW_ID } from './councilDashboardView.js';
 import { AddConfigurationType, AssistedTypes } from '../../mcp/browser/mcpCommandsAddConfiguration.js';
@@ -2480,6 +2484,10 @@ registerSingleton(ICouncilMCPIntegration, CouncilMCPIntegration, InstantiationTy
 registerSingleton(IRedTeamAgent, RedTeamAgent, InstantiationType.Delayed);
 registerSingleton(ICouncilCIRunner, CouncilCIRunner, InstantiationType.Delayed);
 registerSingleton(ICouncilMemoryGraph, CouncilMemoryGraph, InstantiationType.Delayed);
+registerSingleton(ICouncilPolicyEngine, CouncilPolicyEngine, InstantiationType.Delayed);
+registerSingleton(ICouncilPRReviewBoard, CouncilPRReviewBoard, InstantiationType.Delayed);
+registerSingleton(ICouncilGovernance, CouncilGovernance, InstantiationType.Delayed);
+registerSingleton(ICouncilEnterprise, CouncilEnterprise, InstantiationType.Delayed);
 
 // Agent Council Dashboard View
 class CouncilDashboardViewContribution extends Disposable implements IWorkbenchContribution {

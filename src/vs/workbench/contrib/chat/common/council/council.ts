@@ -16,3 +16,7 @@ export * from './councilMCPIntegration.js';
 export * from './redTeamAgent.js';
 export * from './councilCIRunner.js';
 export * from './councilMemoryGraph.js';
+export * from './councilPolicies.js';
+export * from './councilPRReview.js';
+export * from './councilGovernance.js';
+export * from './councilEnterprise.js';
