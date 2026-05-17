@@ -6,6 +6,7 @@
 import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
 import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
 import { ILogService } from '../../../../../../platform/log/common/log.js';
+import { ICouncilTelemetryService } from './councilTelemetryService.js';
 
 export const ICouncilLazyLoader = createDecorator<ICouncilLazyLoader>('councilLazyLoader');
 
@@ -56,6 +57,7 @@ export interface ICouncilLazyLoader extends IDisposable {
 	loadAll(priority?: 'immediate' | 'on-demand' | 'background'): Promise<void>;
 	getMetrics(): Map<ServiceName, LoadMetrics>;
 	getUnloadedServices(): ServiceName[];
+	recordUsage(name: ServiceName): void;
 }
 
 const DEFAULT_CONFIGS: ServiceLoaderConfig[] = [
@@ -91,7 +93,8 @@ export class CouncilLazyLoader extends Disposable implements ICouncilLazyLoader 
 	private readonly loaders: Map<ServiceName, () => Promise<void>>;
 
 	constructor(
-		@ILogService private readonly logService: ILogService
+		@ILogService private readonly logService: ILogService,
+		@ICouncilTelemetryService private readonly telemetryService: ICouncilTelemetryService
 	) {
 		super();
 		this.configs = new Map();
@@ -117,8 +120,22 @@ export class CouncilLazyLoader extends Disposable implements ICouncilLazyLoader 
 		return this.loading.has(name);
 	}
 
+	public recordUsage(name: ServiceName): void {
+		const metric = this.metrics.get(name);
+		if (metric) {
+			this.metrics.set(name, {
+				...metric,
+				wasUsed: true,
+				useCount: metric.useCount + 1
+			});
+		}
+	}
+
 	public async loadService(name: ServiceName): Promise<void> {
-		if (this.loaded.has(name)) return;
+		if (this.loaded.has(name)) {
+			this.recordUsage(name);
+			return;
+		}
 		if (this.loading.has(name)) return;
 
 		const config = this.configs.get(name);
@@ -135,11 +152,17 @@ export class CouncilLazyLoader extends Disposable implements ICouncilLazyLoader 
 
 		this.loading.add(name);
 		const startTime = Date.now();
+		const timeout = config.loadTimeout ?? 30000;
 
 		try {
 			const loader = this.loaders.get(name);
 			if (loader) {
-				await loader();
+				await Promise.race([
+					loader(),
+					new Promise((_, reject) =>
+						setTimeout(() => reject(new Error(`Loading timeout for ${name}`)), timeout)
+					)
+				]);
 			}
 
 			this.loaded.add(name);
@@ -154,6 +177,7 @@ export class CouncilLazyLoader extends Disposable implements ICouncilLazyLoader 
 				useCount: 0
 			});
 
+			this.telemetryService.sendPerformance(`lazyLoader.${name}`, loadTime, 'ms');
 			this.logService.debug(`[Council LazyLoader] Loaded ${name} in ${loadTime}ms`);
 		} catch (error) {
 			this.loading.delete(name);
@@ -166,7 +190,7 @@ export class CouncilLazyLoader extends Disposable implements ICouncilLazyLoader 
 		const services = Array.from(this.configs.values())
 			.filter(c => !priority || c.priority === priority)
 			.sort((a, b) => {
-				const order = { immediate: 0, onDemand: 1, background: 2 };
+				const order = { immediate: 0, 'on-demand': 1, background: 2 };
 				return order[a.priority] - order[b.priority];
 			});
 

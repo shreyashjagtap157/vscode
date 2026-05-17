@@ -41,6 +41,7 @@ import { ICouncilKeybindings, CouncilKeybindings } from './councilKeybindings.js
 import { ICouncilSearchFilter, CouncilSearchFilter } from './councilSearchFilter.js';
 import { ICouncilCredentialManager, CouncilCredentialManager } from './councilCredentialManager.js';
 import { ICouncilDataRetention, CouncilDataRetention } from './councilDataRetention.js';
+import { ICouncilTelemetryService, CouncilTelemetryService } from './councilTelemetryService.js';
 
 registerSingleton(IAgentProfileManager, AgentProfileManager, InstantiationType.Delayed);
 registerSingleton(ICouncilOrchestrator, CouncilOrchestrator, InstantiationType.Delayed);
@@ -78,3 +79,4 @@ registerSingleton(ICouncilKeybindings, CouncilKeybindings, InstantiationType.Del
 registerSingleton(ICouncilSearchFilter, CouncilSearchFilter, InstantiationType.Delayed);
 registerSingleton(ICouncilCredentialManager, CouncilCredentialManager, InstantiationType.Delayed);
 registerSingleton(ICouncilDataRetention, CouncilDataRetention, InstantiationType.Delayed);
+registerSingleton(ICouncilTelemetryService, CouncilTelemetryService, InstantiationType.Delayed);

@@ -72,6 +72,7 @@ import { ICouncilKeybindings, CouncilKeybindings } from '../common/council/counc
 import { ICouncilSearchFilter, CouncilSearchFilter } from '../common/council/councilSearchFilter.js';
 import { ICouncilCredentialManager, CouncilCredentialManager } from '../common/council/councilCredentialManager.js';
 import { ICouncilDataRetention, CouncilDataRetention } from '../common/council/councilDataRetention.js';
+import { ICouncilTelemetryService, CouncilTelemetryService } from '../common/council/councilTelemetryService.js';
 import { CouncilChatParticipant } from '../common/council/councilParticipant.js';
 import { CouncilDashboardView, COUNCIL_DASHBOARD_VIEW_ID } from './councilDashboardView.js';
 import { AddConfigurationType, AssistedTypes } from '../../mcp/browser/mcpCommandsAddConfiguration.js';
@@ -1798,6 +1799,121 @@ configurationRegistry.registerConfiguration({
 			items: { type: 'string' },
 			default: ['architecture', 'refactor', 'security', 'design', 'review', 'complex', 'multi-file'],
 			description: nls.localize('council.autoActivateKeywords', "Keywords that trigger automatic council activation when auto-activate is enabled.")
+		},
+
+		// Council Security Settings
+		'council.security.secretDetection': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.security.secretDetection', "Enable automatic secret detection in agent outputs."),
+			tags: ['experimental']
+		},
+		'council.security.inputSanitization': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.security.inputSanitization', "Enable input sanitization to prevent prompt injection attacks."),
+			tags: ['experimental']
+		},
+
+		// Council Performance Settings
+		'council.performance.rateLimitEnabled': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.performance.rateLimitEnabled', "Enable rate limiting for API calls."),
+			tags: ['experimental']
+		},
+		'council.performance.maxRequestsPerMinute': {
+			type: 'number',
+			default: 60,
+			minimum: 1,
+			maximum: 300,
+			description: nls.localize('council.performance.maxRequestsPerMinute', "Maximum number of requests per minute.")
+		},
+		'council.performance.cacheEnabled': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.performance.cacheEnabled', "Enable result caching for repeated queries."),
+			tags: ['experimental']
+		},
+		'council.performance.cacheTTL': {
+			type: 'number',
+			default: 300,
+			minimum: 60,
+			maximum: 3600,
+			description: nls.localize('council.performance.cacheTTL', "Cache time-to-live in seconds.")
+		},
+
+		// Council Cost Settings
+		'council.cost.budgetEnabled': {
+			type: 'boolean',
+			default: false,
+			description: nls.localize('council.cost.budgetEnabled', "Enable cost budget tracking and alerts."),
+			tags: ['experimental']
+		},
+		'council.cost.dailyBudget': {
+			type: 'number',
+			default: 10,
+			minimum: 0,
+			description: nls.localize('council.cost.dailyBudget', "Daily cost budget in USD.")
+		},
+
+		// Council UI Settings
+		'council.ui.streamingEnabled': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.ui.streamingEnabled', "Enable real-time streaming UI updates."),
+			tags: ['experimental']
+		},
+		'council.ui.showLoadingStates': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.ui.showLoadingStates', "Show loading indicators during operations.")
+		},
+		'council.ui.enableWarRoom': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.ui.enableWarRoom', "Enable the Council War Room dashboard."),
+			tags: ['experimental']
+		},
+
+		// Council Data Retention
+		'council.retention.sessionMaxAge': {
+			type: 'number',
+			default: 30,
+			minimum: 1,
+			maximum: 365,
+			description: nls.localize('council.retention.sessionMaxAge', "Maximum age of session data in days.")
+		},
+		'council.retention.autoCleanup': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.retention.autoCleanup', "Enable automatic cleanup of old data.")
+		},
+
+		// Council Auto PR Settings
+		'council.autoPR.enabled': {
+			type: 'boolean',
+			default: false,
+			description: nls.localize('council.autoPR.enabled', "Enable automatic PR creation from council fixes."),
+			tags: ['experimental']
+		},
+		'council.autoPR.requireApproval': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.autoPR.requireApproval', "Require human approval before creating PRs.")
+		},
+
+		// Council Learning Settings
+		'council.learning.enabled': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.learning.enabled', "Enable the learning engine for preference adaptation."),
+			tags: ['experimental']
+		},
+		'council.learning.trackOutcomes': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.learning.trackOutcomes', "Track session outcomes for learning.")
 		}
 	}
 });
@@ -2530,6 +2646,7 @@ registerSingleton(ICouncilKeybindings, CouncilKeybindings, InstantiationType.Del
 registerSingleton(ICouncilSearchFilter, CouncilSearchFilter, InstantiationType.Delayed);
 registerSingleton(ICouncilCredentialManager, CouncilCredentialManager, InstantiationType.Delayed);
 registerSingleton(ICouncilDataRetention, CouncilDataRetention, InstantiationType.Delayed);
+registerSingleton(ICouncilTelemetryService, CouncilTelemetryService, InstantiationType.Delayed);
 
 // Agent Council Dashboard View
 class CouncilDashboardViewContribution extends Disposable implements IWorkbenchContribution {
