@@ -16,6 +16,10 @@ import { ICouncilMCPIntegration, CouncilMCPIntegration } from './councilMCPInteg
 import { IRedTeamAgent, RedTeamAgent } from './redTeamAgent.js';
 import { ICouncilCIRunner, CouncilCIRunner } from './councilCIRunner.js';
 import { ICouncilMemoryGraph, CouncilMemoryGraph } from './councilMemoryGraph.js';
+import { ICouncilPolicyEngine, CouncilPolicyEngine } from './councilPolicies.js';
+import { ICouncilPRReviewBoard, CouncilPRReviewBoard } from './councilPRReview.js';
+import { ICouncilGovernance, CouncilGovernance } from './councilGovernance.js';
+import { ICouncilEnterprise, CouncilEnterprise } from './councilEnterprise.js';
 
 registerSingleton(IAgentProfileManager, AgentProfileManager, InstantiationType.Delayed);
 registerSingleton(ICouncilOrchestrator, CouncilOrchestrator, InstantiationType.Delayed);
@@ -28,3 +32,7 @@ registerSingleton(ICouncilMCPIntegration, CouncilMCPIntegration, InstantiationTy
 registerSingleton(IRedTeamAgent, RedTeamAgent, InstantiationType.Delayed);
 registerSingleton(ICouncilCIRunner, CouncilCIRunner, InstantiationType.Delayed);
 registerSingleton(ICouncilMemoryGraph, CouncilMemoryGraph, InstantiationType.Delayed);
+registerSingleton(ICouncilPolicyEngine, CouncilPolicyEngine, InstantiationType.Delayed);
+registerSingleton(ICouncilPRReviewBoard, CouncilPRReviewBoard, InstantiationType.Delayed);
+registerSingleton(ICouncilGovernance, CouncilGovernance, InstantiationType.Delayed);
+registerSingleton(ICouncilEnterprise, CouncilEnterprise, InstantiationType.Delayed);
