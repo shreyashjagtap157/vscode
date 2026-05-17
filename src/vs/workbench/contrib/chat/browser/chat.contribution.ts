@@ -73,6 +73,22 @@ import { ICouncilSearchFilter, CouncilSearchFilter } from '../common/council/cou
 import { ICouncilCredentialManager, CouncilCredentialManager } from '../common/council/councilCredentialManager.js';
 import { ICouncilDataRetention, CouncilDataRetention } from '../common/council/councilDataRetention.js';
 import { ICouncilTelemetryService, CouncilTelemetryService } from '../common/council/councilTelemetryService.js';
+import { ICouncilCircuitBreaker, CouncilCircuitBreaker } from '../common/council/councilCircuitBreaker.js';
+import { ICouncilSessionEviction, CouncilSessionEviction } from '../common/council/councilSessionEviction.js';
+import { ICouncilRetry, CouncilRetry } from '../common/council/councilRetry.js';
+import { ICouncilContextWindow, CouncilContextWindow } from '../common/council/councilContextWindow.js';
+import { ICouncilModelCache, CouncilModelCache } from '../common/council/councilModelCache.js';
+import { ICouncilConnectionPool, CouncilConnectionPool } from '../common/council/councilConnectionPool.js';
+import { ICouncilTokenBudget, CouncilTokenBudget } from '../common/council/councilTokenBudget.js';
+import { ICouncilRequestDedup, CouncilRequestDedup } from '../common/council/councilRequestDedup.js';
+import { ICouncilHealthCheck, CouncilHealthCheck } from '../common/council/councilHealthCheck.js';
+import { ICouncilUndoRedo, CouncilUndoRedo } from '../common/council/councilUndoRedo.js';
+import { ICouncilDistributedCache, CouncilDistributedCache } from '../common/council/councilDistributedCache.js';
+import { ICouncilTelemetrySampling, CouncilTelemetrySampling } from '../common/council/councilTelemetrySampling.js';
+import { ICouncilSessionExport, CouncilSessionExport } from '../common/council/councilSessionExport.js';
+import { ICouncilPersonalityPersistence, CouncilPersonalityPersistence } from '../common/council/councilPersonalityPersistence.js';
+import { ICouncilBatchOperations, CouncilBatchOperations } from '../common/council/councilBatchOperations.js';
+import { ICouncilEnhancedOrchestrator, CouncilEnhancedOrchestrator } from '../common/council/councilEnhancedOrchestrator.js';
 import { CouncilChatParticipant } from '../common/council/councilParticipant.js';
 import { CouncilDashboardView, COUNCIL_DASHBOARD_VIEW_ID } from './councilDashboardView.js';
 import { AddConfigurationType, AssistedTypes } from '../../mcp/browser/mcpCommandsAddConfiguration.js';
@@ -1914,6 +1930,108 @@ configurationRegistry.registerConfiguration({
 			type: 'boolean',
 			default: true,
 			description: nls.localize('council.learning.trackOutcomes', "Track session outcomes for learning.")
+		},
+
+		// Council Reliability Settings
+		'council.reliability.circuitBreakerEnabled': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.reliability.circuitBreakerEnabled', "Enable circuit breaker for LLM calls."),
+			tags: ['experimental']
+		},
+		'council.reliability.circuitBreakerThreshold': {
+			type: 'number',
+			default: 5,
+			minimum: 1,
+			maximum: 20,
+			description: nls.localize('council.reliability.circuitBreakerThreshold', "Number of failures before circuit opens.")
+		},
+		'council.reliability.retryEnabled': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.reliability.retryEnabled', "Enable automatic retry with exponential backoff.")
+		},
+		'council.reliability.maxRetries': {
+			type: 'number',
+			default: 3,
+			minimum: 0,
+			maximum: 10,
+			description: nls.localize('council.reliability.maxRetries', "Maximum number of retry attempts.")
+		},
+
+		// Council Context Settings
+		'council.context.maxTokens': {
+			type: 'number',
+			default: 128000,
+			minimum: 4000,
+			maximum: 200000,
+			description: nls.localize('council.context.maxTokens', "Maximum context window size in tokens.")
+		},
+		'council.context.truncationStrategy': {
+			type: 'string',
+			enum: ['oldest-first', 'least-relevant', 'summarize'],
+			default: 'oldest-first',
+			description: nls.localize('council.context.truncationStrategy', "Strategy for context truncation when limits are reached.")
+		},
+
+		// Council Pool Settings
+		'council.pool.maxConcurrent': {
+			type: 'number',
+			default: 5,
+			minimum: 1,
+			maximum: 20,
+			description: nls.localize('council.pool.maxConcurrent', "Maximum concurrent LLM requests.")
+		},
+
+		// Council Token Budget Settings
+		'council.budget.maxTokensPerSession': {
+			type: 'number',
+			default: 100000,
+			minimum: 10000,
+			description: nls.localize('council.budget.maxTokensPerSession', "Maximum tokens per council session.")
+		},
+		'council.budget.hardLimit': {
+			type: 'boolean',
+			default: false,
+			description: nls.localize('council.budget.hardLimit', "Enforce hard token budget limit (cancels session when exceeded).")
+		},
+
+		// Council Session Settings
+		'council.session.maxSessions': {
+			type: 'number',
+			default: 100,
+			minimum: 10,
+			maximum: 500,
+			description: nls.localize('council.session.maxSessions', "Maximum number of sessions to keep in memory.")
+		},
+		'council.session.maxAgeHours': {
+			type: 'number',
+			default: 1,
+			minimum: 0.5,
+			maximum: 24,
+			description: nls.localize('council.session.maxAgeHours', "Maximum age of sessions before eviction (hours).")
+		},
+
+		// Council Telemetry Settings
+		'council.telemetry.samplingEnabled': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.telemetry.samplingEnabled', "Enable telemetry sampling to reduce volume."),
+			tags: ['experimental']
+		},
+		'council.telemetry.debugSampleRate': {
+			type: 'number',
+			default: 0.1,
+			minimum: 0,
+			maximum: 1,
+			description: nls.localize('council.telemetry.debugSampleRate', "Sample rate for debug events (0-1).")
+		},
+
+		// Council Export Settings
+		'council.export.sanitizeSecrets': {
+			type: 'boolean',
+			default: true,
+			description: nls.localize('council.export.sanitizeSecrets', "Automatically sanitize secrets during session export.")
 		}
 	}
 });
@@ -2647,6 +2765,22 @@ registerSingleton(ICouncilSearchFilter, CouncilSearchFilter, InstantiationType.D
 registerSingleton(ICouncilCredentialManager, CouncilCredentialManager, InstantiationType.Delayed);
 registerSingleton(ICouncilDataRetention, CouncilDataRetention, InstantiationType.Delayed);
 registerSingleton(ICouncilTelemetryService, CouncilTelemetryService, InstantiationType.Delayed);
+registerSingleton(ICouncilCircuitBreaker, CouncilCircuitBreaker, InstantiationType.Delayed);
+registerSingleton(ICouncilSessionEviction, CouncilSessionEviction, InstantiationType.Delayed);
+registerSingleton(ICouncilRetry, CouncilRetry, InstantiationType.Delayed);
+registerSingleton(ICouncilContextWindow, CouncilContextWindow, InstantiationType.Delayed);
+registerSingleton(ICouncilModelCache, CouncilModelCache, InstantiationType.Delayed);
+registerSingleton(ICouncilConnectionPool, CouncilConnectionPool, InstantiationType.Delayed);
+registerSingleton(ICouncilTokenBudget, CouncilTokenBudget, InstantiationType.Delayed);
+registerSingleton(ICouncilRequestDedup, CouncilRequestDedup, InstantiationType.Delayed);
+registerSingleton(ICouncilHealthCheck, CouncilHealthCheck, InstantiationType.Delayed);
+registerSingleton(ICouncilUndoRedo, CouncilUndoRedo, InstantiationType.Delayed);
+registerSingleton(ICouncilDistributedCache, CouncilDistributedCache, InstantiationType.Delayed);
+registerSingleton(ICouncilTelemetrySampling, CouncilTelemetrySampling, InstantiationType.Delayed);
+registerSingleton(ICouncilSessionExport, CouncilSessionExport, InstantiationType.Delayed);
+registerSingleton(ICouncilPersonalityPersistence, CouncilPersonalityPersistence, InstantiationType.Delayed);
+registerSingleton(ICouncilBatchOperations, CouncilBatchOperations, InstantiationType.Delayed);
+registerSingleton(ICouncilEnhancedOrchestrator, CouncilEnhancedOrchestrator, InstantiationType.Delayed);
 
 // Agent Council Dashboard View
 class CouncilDashboardViewContribution extends Disposable implements IWorkbenchContribution {
