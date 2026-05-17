@@ -51,6 +51,21 @@ import { ICouncilPolicyEngine, CouncilPolicyEngine } from '../common/council/cou
 import { ICouncilPRReviewBoard, CouncilPRReviewBoard } from '../common/council/councilPRReview.js';
 import { ICouncilGovernance, CouncilGovernance } from '../common/council/councilGovernance.js';
 import { ICouncilEnterprise, CouncilEnterprise } from '../common/council/councilEnterprise.js';
+import { ICouncilSmartAgentSelector, CouncilSmartAgentSelector } from '../common/council/councilSmartAgentSelector.js';
+import { ICouncilModelRouter, CouncilModelRouter } from '../common/council/councilModelRouter.js';
+import { ICouncilSecretDetector, CouncilSecretDetector } from '../common/council/councilSecretDetector.js';
+import { ICouncilInputSanitizer, CouncilInputSanitizer } from '../common/council/councilInputSanitizer.js';
+import { ICouncilNotificationService, CouncilNotificationService } from '../common/council/councilNotificationService.js';
+import { ICouncilCostTracker, CouncilCostTracker } from '../common/council/councilCostTracker.js';
+import { ICouncilResultCache, CouncilResultCache } from '../common/council/councilResultCache.js';
+import { ICouncilIncrementalReview, CouncilIncrementalReview } from '../common/council/councilIncrementalReview.js';
+import { ICouncilStreamingUI, CouncilStreamingUI } from '../common/council/councilStreamingUI.js';
+import { ICouncilFixApplier, CouncilFixApplier } from '../common/council/councilFixApplier.js';
+import { ICouncilInteractiveDebate, CouncilInteractiveDebate } from '../common/council/councilInteractiveDebate.js';
+import { ICouncilSessionReplay, CouncilSessionReplay } from '../common/council/councilSessionReplay.js';
+import { ICouncilDiffView, CouncilDiffView } from '../common/council/councilDiffView.js';
+import { ICouncilLearningEngine, CouncilLearningEngine } from '../common/council/councilLearningEngine.js';
+import { ICouncilAutoPR, CouncilAutoPR } from '../common/council/councilAutoPR.js';
 import { CouncilChatParticipant } from '../common/council/councilParticipant.js';
 import { CouncilDashboardView, COUNCIL_DASHBOARD_VIEW_ID } from './councilDashboardView.js';
 import { AddConfigurationType, AssistedTypes } from '../../mcp/browser/mcpCommandsAddConfiguration.js';
@@ -2488,6 +2503,21 @@ registerSingleton(ICouncilPolicyEngine, CouncilPolicyEngine, InstantiationType.D
 registerSingleton(ICouncilPRReviewBoard, CouncilPRReviewBoard, InstantiationType.Delayed);
 registerSingleton(ICouncilGovernance, CouncilGovernance, InstantiationType.Delayed);
 registerSingleton(ICouncilEnterprise, CouncilEnterprise, InstantiationType.Delayed);
+registerSingleton(ICouncilSmartAgentSelector, CouncilSmartAgentSelector, InstantiationType.Delayed);
+registerSingleton(ICouncilModelRouter, CouncilModelRouter, InstantiationType.Delayed);
+registerSingleton(ICouncilSecretDetector, CouncilSecretDetector, InstantiationType.Delayed);
+registerSingleton(ICouncilInputSanitizer, CouncilInputSanitizer, InstantiationType.Delayed);
+registerSingleton(ICouncilNotificationService, CouncilNotificationService, InstantiationType.Delayed);
+registerSingleton(ICouncilCostTracker, CouncilCostTracker, InstantiationType.Delayed);
+registerSingleton(ICouncilResultCache, CouncilResultCache, InstantiationType.Delayed);
+registerSingleton(ICouncilIncrementalReview, CouncilIncrementalReview, InstantiationType.Delayed);
+registerSingleton(ICouncilStreamingUI, CouncilStreamingUI, InstantiationType.Delayed);
+registerSingleton(ICouncilFixApplier, CouncilFixApplier, InstantiationType.Delayed);
+registerSingleton(ICouncilInteractiveDebate, CouncilInteractiveDebate, InstantiationType.Delayed);
+registerSingleton(ICouncilSessionReplay, CouncilSessionReplay, InstantiationType.Delayed);
+registerSingleton(ICouncilDiffView, CouncilDiffView, InstantiationType.Delayed);
+registerSingleton(ICouncilLearningEngine, CouncilLearningEngine, InstantiationType.Delayed);
+registerSingleton(ICouncilAutoPR, CouncilAutoPR, InstantiationType.Delayed);
 
 // Agent Council Dashboard View
 class CouncilDashboardViewContribution extends Disposable implements IWorkbenchContribution {
