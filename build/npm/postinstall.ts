@@ -52,7 +52,7 @@ function spawnAsync(command: string, args: string[], opts: child_process.SpawnOp
 	});
 }
 
-async function npmInstallAsync(dir: string, opts?: child_process.SpawnOptions): Promise<void> {
+async function npmInstallAsync(dir: string, opts?: child_process.SpawnOptions & { npmCommand?: string }): Promise<void> {
 	const finalOpts: child_process.SpawnOptions = {
 		env: { ...process.env },
 		...(opts ?? {}),
@@ -60,7 +60,7 @@ async function npmInstallAsync(dir: string, opts?: child_process.SpawnOptions): 
 		shell: true,
 	};
 
-	const command = process.env['npm_command'] || 'install';
+	const command = opts?.npmCommand ?? process.env['npm_command'] ?? 'install';
 
 	if (process.env['VSCODE_REMOTE_DEPENDENCIES_CONTAINER_NAME'] && /^(.build\/distro\/npm\/)?remote$/.test(dir)) {
 		const syncOpts: child_process.SpawnSyncOptions = {
@@ -253,21 +253,42 @@ async function main() {
 		}
 
 		if (dir === 'build') {
-			nativeTasks.push(() => {
+			nativeTasks.push(async () => {
 				const env: NodeJS.ProcessEnv = { ...process.env };
 				if (process.env['CC']) { env['CC'] = 'gcc'; }
 				if (process.env['CXX']) { env['CXX'] = 'g++'; }
 				if (process.env['CXXFLAGS']) { env['CXXFLAGS'] = ''; }
 				if (process.env['LDFLAGS']) { env['LDFLAGS'] = ''; }
 				setNpmrcConfig('build', env);
-				return npmInstallAsync('build', { env });
+
+				// Install without running scripts so we can patch tree-sitter first
+				await npmInstallAsync('build', { env, npmCommand: 'install --ignore-scripts' });
+
+				// Patch tree-sitter binding.gyp for Node 25+ C++20 requirement
+				if (process.platform === 'win32') {
+					const bindingGypPath = path.join(root, 'build', 'node_modules', 'tree-sitter', 'binding.gyp');
+					if (fs.existsSync(bindingGypPath)) {
+						const content = fs.readFileSync(bindingGypPath, 'utf8');
+						const patched = content
+							.replace(/"\/std:c\+\+17"/g, '"/std:c++20"')
+							.replace(/"-std=c\+\+17"/g, '"-std=c++20"')
+							.replace(/"CLANG_CXX_LANGUAGE_STANDARD": "c\+\+17"/g, '"CLANG_CXX_LANGUAGE_STANDARD": "c++20"');
+						if (content !== patched) {
+							fs.writeFileSync(bindingGypPath, patched);
+							log('build', 'Patched tree-sitter binding.gyp (C++17 -> C++20 for Node 25+)');
+						}
+					}
+				}
+
+				// Rebuild native modules with patched binding.gyp
+				await npmInstallAsync('build', { env, npmCommand: 'rebuild' });
 			});
 			continue;
 		}
 
 		if (/^(.build\/distro\/npm\/)?remote$/.test(dir)) {
 			const remoteDir = dir;
-			nativeTasks.push(() => {
+			nativeTasks.push(async () => {
 				const env: NodeJS.ProcessEnv = { ...process.env };
 				if (process.env['VSCODE_REMOTE_CC']) {
 					env['CC'] = process.env['VSCODE_REMOTE_CC'];
@@ -286,7 +307,25 @@ async function main() {
 				if (process.env['VSCODE_REMOTE_LDFLAGS']) { env['LDFLAGS'] = process.env['VSCODE_REMOTE_LDFLAGS']; }
 				if (process.env['VSCODE_REMOTE_NODE_GYP']) { env['npm_config_node_gyp'] = process.env['VSCODE_REMOTE_NODE_GYP']; }
 				setNpmrcConfig('remote', env);
-				return npmInstallAsync(remoteDir, { env });
+
+				// Install without running scripts so we can patch @vscode/deviceid first
+				await npmInstallAsync('remote', { env, npmCommand: 'install --ignore-scripts' });
+
+				// Patch @vscode/deviceid binding.gyp to disable Spectre mitigation
+				if (process.platform === 'win32') {
+					const deviceidGypPath = path.join(root, 'remote', 'node_modules', '@vscode', 'deviceid', 'binding.gyp');
+					if (fs.existsSync(deviceidGypPath)) {
+						const content = fs.readFileSync(deviceidGypPath, 'utf8');
+						const patched = content.replace(/"SpectreMitigation":\s*"Spectre"/g, '"SpectreMitigation": "false"');
+						if (content !== patched) {
+							fs.writeFileSync(deviceidGypPath, patched);
+							log('remote', 'Patched @vscode/deviceid binding.gyp (disabled Spectre mitigation)');
+						}
+					}
+				}
+
+				// Rebuild native modules with patched binding.gyp
+				await npmInstallAsync('remote', { env, npmCommand: 'rebuild' });
 			});
 			continue;
 		}
