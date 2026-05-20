@@ -865,7 +865,7 @@ export function defineComponentFixture(options: ComponentFixtureOptions): Themed
 		isolation: 'none',
 		displayMode: { type: 'component' },
 		background: theme === darkTheme ? 'dark' : 'light',
-		render: async (container: HTMLElement, context) => {
+		render: async (container: HTMLElement, context: any) => {
 			const disposableStore = new DisposableStore();
 
 			// Replace Math.random with a seeded PRNG so fixtures render deterministically.

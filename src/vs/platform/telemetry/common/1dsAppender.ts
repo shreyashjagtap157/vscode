@@ -31,7 +31,7 @@ async function getClient(instrumentationKey: string, addInternalFlag?: boolean, 
 	const appInsightsCore = new oneDs.AppInsightsCore();
 	const collectorChannelPlugin: PostChannel = new postPlugin.PostChannel();
 	// Configure the app insights core to send to collector++ and disable logging of debug info
-	const coreConfig: IExtendedConfiguration = {
+	const coreConfig = {
 		instrumentationKey,
 		endpointUrl,
 		loggingLevelTelemetry: 0,
@@ -42,22 +42,22 @@ async function getClient(instrumentationKey: string, addInternalFlag?: boolean, 
 		channels: [[
 			collectorChannelPlugin
 		]]
-	};
+	} as unknown as IExtendedConfiguration;
 
 	if (xhrOverride) {
-		coreConfig.extensionConfig = {};
+		(coreConfig as any).extensionConfig = {};
 		// Configure the channel to use a XHR Request override since it's not available in node
 		const channelConfig: IChannelConfiguration = {
 			alwaysUseXhrOverride: true,
 			ignoreMc1Ms0CookieProcessing: true,
 			httpXHROverride: xhrOverride
 		};
-		coreConfig.extensionConfig[collectorChannelPlugin.identifier] = channelConfig;
+		(coreConfig as any).extensionConfig[collectorChannelPlugin.identifier] = channelConfig;
 	}
 
 	appInsightsCore.initialize(coreConfig, []);
 
-	appInsightsCore.addTelemetryInitializer((envelope) => {
+	(appInsightsCore as any).addTelemetryInitializer((envelope: any) => {
 		// Opt the user out of 1DS data sharing
 		envelope['ext'] = envelope['ext'] ?? {};
 		envelope['ext']['web'] = envelope['ext']['web'] ?? {};
@@ -70,7 +70,7 @@ async function getClient(instrumentationKey: string, addInternalFlag?: boolean, 
 		}
 	});
 
-	return appInsightsCore;
+	return appInsightsCore as unknown as IAppInsightsCore;
 }
 
 // TODO @lramos15 maybe make more in line with src/vs/platform/telemetry/browser/appInsightsAppender.ts with caching support
