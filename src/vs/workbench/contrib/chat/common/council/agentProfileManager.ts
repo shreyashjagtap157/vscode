@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../../../base/common/event.js';
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { IFileService } from '../../../../../../platform/files/common/files.js';
-import { URI } from '../../../../../../base/common/uri.js';
+import { Emitter, Event } from '../../../../../base/common/event.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { URI } from '../../../../../base/common/uri.js';
 
 export const IAgentProfileManager = createDecorator<IAgentProfileManager>('agentProfileManager');
 
@@ -27,13 +27,13 @@ export interface CouncilAgentProfile {
 	readonly modelOverride?: string;
 }
 
-export interface ProfileValidationError {
+export interface IProfileValidationFieldError {
 	field: string;
 	message: string;
 }
 
 export class ProfileValidationError extends Error {
-	constructor(public readonly errors: ProfileValidationError[]) {
+	constructor(public readonly errors: IProfileValidationFieldError[]) {
 		super(`Profile validation failed: ${errors.map(e => `${e.field}: ${e.message}`).join(', ')}`);
 		this.name = 'ProfileValidationError';
 	}
@@ -232,7 +232,7 @@ export class AgentProfileManager extends Disposable implements IAgentProfileMana
 	}
 
 	private validateProfile(profile: CouncilAgentProfile): void {
-		const errors: ProfileValidationError[] = [];
+		const errors: IProfileValidationFieldError[] = [];
 
 		if (!profile.roleId || profile.roleId.trim().length === 0) {
 			errors.push({ field: 'roleId', message: 'roleId is required and cannot be empty' });

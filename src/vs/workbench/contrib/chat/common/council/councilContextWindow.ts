@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
 
 export const ICouncilContextWindow = createDecorator<ICouncilContextWindow>('councilContextWindow');
 
@@ -56,7 +56,7 @@ export class CouncilContextWindow extends Disposable implements ICouncilContextW
 	private config: ContextWindowConfig;
 
 	constructor(
-		@ILogService private readonly logService: ILogService
+		@ILogService _logService: ILogService
 	) {
 		super();
 		this.segments = new Map();

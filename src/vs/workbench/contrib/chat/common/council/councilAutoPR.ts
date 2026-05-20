@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
 import { ICouncilOrchestrator, CouncilResult } from './councilOrchestrator.js';
-import { ICouncilFixApplier, CodeFix, FixApplicationResult } from './councilFixApplier.js';
-import { Event, Emitter } from '../../../../../../base/common/event.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
+import { ICouncilFixApplier, FixApplicationResult } from './councilFixApplier.js';
+import { Event, Emitter } from '../../../../../base/common/event.js';
+import { generateUuid } from '../../../../../base/common/uuid.js';
 import { ICouncilTelemetryService } from './councilTelemetryService.js';
-import { IFileService } from '../../../../../../platform/files/common/files.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { IWorkspaceContextService } from '../../../../../../platform/workspace/common/workspace.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { URI } from '../../../../../base/common/uri.js';
+import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 
 export const ICouncilAutoPR = createDecorator<ICouncilAutoPR>('councilAutoPR');
 

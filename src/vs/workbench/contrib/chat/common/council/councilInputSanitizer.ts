@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
 
 export const ICouncilInputSanitizer = createDecorator<ICouncilInputSanitizer>('councilInputSanitizer');
 
@@ -87,7 +87,7 @@ const PROMPT_INJECTION_PATTERNS: Array<{
 	{
 		type: 'command_injection',
 		severity: 'critical',
-		pattern: /`[^`]*\b(rm\s+-rf|chmod\s+777|curl\s+.*\|\s*(bash|sh)|wget\s+.*\|\s*(bash|sh)|nc\s+-|mkfifo|/dev/tcp)/gi,
+		pattern: /`[^`]*\b(rm\s+-rf|chmod\s+777|curl\s+.*\|\s*(bash|sh)|wget\s+.*\|\s*(bash|sh)|nc\s+-|mkfifo|\/dev\/tcp)/gi,
 		description: 'Potentially dangerous command injection',
 		action: 'blocked'
 	},
