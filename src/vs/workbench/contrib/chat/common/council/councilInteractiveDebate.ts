@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { Event, Emitter } from '../../../../../../base/common/event.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { Event, Emitter } from '../../../../../base/common/event.js';
+import { generateUuid } from '../../../../../base/common/uuid.js';
 
 export const ICouncilInteractiveDebate = createDecorator<ICouncilInteractiveDebate>('councilInteractiveDebate');
 
@@ -16,7 +16,7 @@ export interface DebateParticipant {
 	readonly position: string;
 	readonly evidenceCount: number;
 	readonly confidenceScore: number;
-	readonly votes: number;
+	votes: number;
 }
 
 export interface InteractiveDebate {
@@ -24,11 +24,11 @@ export interface InteractiveDebate {
 	readonly sessionId: string;
 	readonly topic: string;
 	readonly participants: DebateParticipant[];
-	readonly status: 'active' | 'resolved' | 'dismissed';
-	readonly resolution?: string;
-	readonly resolutionMethod?: 'user_vote' | 'auto_resolve' | 'consensus';
+	status: 'active' | 'resolved' | 'dismissed';
+	resolution?: string;
+	resolutionMethod?: 'user_vote' | 'auto_resolve' | 'consensus';
 	readonly createdAt: number;
-	readonly resolvedAt?: number;
+	resolvedAt?: number;
 }
 
 export interface UserVote {

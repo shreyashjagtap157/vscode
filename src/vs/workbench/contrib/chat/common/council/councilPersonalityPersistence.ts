@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../../platform/storage/common/storage.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
 import { CouncilAgentProfile } from './agentProfileManager.js';
 
 export const ICouncilPersonalityPersistence = createDecorator<ICouncilPersonalityPersistence>('councilPersonalityPersistence');
@@ -17,9 +17,9 @@ export interface PersonalityAdaptation {
 	readonly tokenAdjustment: number;
 	readonly priorityWeightAdjustment: number;
 	readonly preferredToolsAdjustment: string[];
-	readonly successCount: number;
-	readonly failureCount: number;
-	readonly lastAdapted: number;
+	successCount: number;
+	failureCount: number;
+	lastAdapted: number;
 }
 
 export interface ICouncilPersonalityPersistence extends IDisposable {

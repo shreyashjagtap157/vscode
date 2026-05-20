@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { Event, Emitter } from '../../../../../../base/common/event.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { Event, Emitter } from '../../../../../base/common/event.js';
 
 export const ICouncilStreamingUI = createDecorator<ICouncilStreamingUI>('councilStreamingUI');
 
@@ -28,8 +28,8 @@ export interface StreamingSession {
 	readonly sessionId: string;
 	readonly events: StreamingEvent[];
 	readonly startTime: number;
-	readonly endTime?: number;
-	readonly status: 'streaming' | 'complete' | 'failed';
+	endTime?: number;
+	status: 'streaming' | 'complete' | 'failed';
 	readonly agentStatuses: Map<string, 'idle' | 'running' | 'complete' | 'failed'>;
 }
 

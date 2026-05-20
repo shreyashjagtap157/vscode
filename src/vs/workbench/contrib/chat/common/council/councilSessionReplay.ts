@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../../platform/storage/common/storage.js';
-import { Event, Emitter } from '../../../../../../base/common/event.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
+import { Event, Emitter } from '../../../../../base/common/event.js';
+import { generateUuid } from '../../../../../base/common/uuid.js';
 
 export const ICouncilSessionReplay = createDecorator<ICouncilSessionReplay>('councilSessionReplay');
 
@@ -26,19 +26,19 @@ export interface RecordedSession {
 	readonly sessionId: string;
 	readonly request: string;
 	readonly events: ReplayEvent[];
-	readonly result?: string;
-	readonly confidence?: number;
+	result?: string;
+	confidence?: number;
 	readonly startTime: number;
-	readonly endTime?: number;
+	endTime?: number;
 	readonly agents: string[];
-	readonly status: 'completed' | 'failed' | 'cancelled';
+	status: 'completed' | 'failed' | 'cancelled';
 }
 
 export interface ReplayState {
-	readonly currentEventIndex: number;
-	readonly isPlaying: boolean;
-	readonly speed: number;
-	readonly currentContent: string;
+	currentEventIndex: number;
+	isPlaying: boolean;
+	speed: number;
+	currentContent: string;
 }
 
 export interface ICouncilSessionReplay extends IDisposable {
@@ -72,7 +72,7 @@ export class CouncilSessionReplay extends Disposable implements ICouncilSessionR
 	readonly onReplayUpdate = this._onReplayUpdate.event;
 
 	private readonly recordings: Map<string, RecordedSession>;
-	private activeReplay: { sessionId: string; state: ReplayState; interval?: number } | undefined;
+	private activeReplay: { sessionId: string; state: ReplayState; interval?: ReturnType<typeof setInterval> } | undefined;
 
 	private readonly storageKey = 'council.sessionReplay.recordings';
 

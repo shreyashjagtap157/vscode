@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { Event, Emitter } from '../../../../../../base/common/event.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { Event, Emitter } from '../../../../../base/common/event.js';
 
 export const ICouncilRateLimiter = createDecorator<ICouncilRateLimiter>('councilRateLimiter');
 
@@ -47,14 +47,14 @@ export interface ICouncilRateLimiter extends IDisposable {
 }
 
 interface TokenBucket {
-	readonly tokens: number;
+	tokens: number;
 	readonly maxTokens: number;
 	readonly refillRate: number;
-	readonly lastRefill: number;
+	lastRefill: number;
 }
 
 interface SlidingWindow {
-	readonly requests: number[];
+	requests: number[];
 	readonly maxRequests: number;
 	readonly windowMs: number;
 }
@@ -173,7 +173,6 @@ export class CouncilRateLimiter extends Disposable implements ICouncilRateLimite
 
 	public getStatus(service: string): RateLimitStatus {
 		const window = this.windows.get(service);
-		const bucket = this.buckets.get(service);
 		const now = Date.now();
 
 		if (!window) {

@@ -3,12 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { IFileService } from '../../../../../../platform/files/common/files.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { ICouncilFixApplier, FixApplicationResult } from './councilFixApplier.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { URI } from '../../../../../base/common/uri.js';
 
 export const ICouncilUndoRedo = createDecorator<ICouncilUndoRedo>('councilUndoRedo');
 
@@ -19,7 +18,7 @@ export interface UndoEntry {
 	readonly originalContent: string;
 	readonly newContent: string;
 	readonly timestamp: number;
-	readonly undone: boolean;
+	undone: boolean;
 }
 
 export interface ICouncilUndoRedo extends IDisposable {
@@ -42,8 +41,7 @@ export class CouncilUndoRedo extends Disposable implements ICouncilUndoRedo {
 
 	constructor(
 		@ILogService private readonly logService: ILogService,
-		@IFileService private readonly fileService: IFileService,
-		@ICouncilFixApplier private readonly fixApplier: ICouncilFixApplier
+		@IFileService private readonly fileService: IFileService
 	) {
 		super();
 		this.undoStack = [];
@@ -153,4 +151,4 @@ export class CouncilUndoRedo extends Disposable implements ICouncilUndoRedo {
 	}
 }
 
-import { VSBuffer } from '../../../../../../base/common/buffer.js';
+import { VSBuffer } from '../../../../../base/common/buffer.js';
