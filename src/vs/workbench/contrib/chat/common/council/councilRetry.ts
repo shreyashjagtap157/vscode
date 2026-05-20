@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { CancellationToken, CancellationTokenSource } from '../../../../../base/common/cancellation.js';
 
 export const ICouncilRetry = createDecorator<ICouncilRetry>('councilRetry');
 
@@ -138,7 +138,9 @@ export class CouncilRetry extends Disposable implements ICouncilRetry {
 		const timeoutToken = new CancellationTokenSource();
 		const timeoutHandle = setTimeout(() => timeoutToken.cancel(), timeoutMs);
 
-		const linkedToken = CancellationToken.any(token, timeoutToken.token);
+		const linkedToken = token.isCancellationRequested || timeoutToken.token.isCancellationRequested
+			? CancellationToken.Cancelled
+			: timeoutToken.token;
 
 		try {
 			const result = await this.execute(fn, config, linkedToken);

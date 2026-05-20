@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
 import { ICouncilResultCache } from './councilResultCache.js';
 
 export const ICouncilRequestDedup = createDecorator<ICouncilRequestDedup>('councilRequestDedup');
@@ -15,7 +15,7 @@ export interface DedupEntry {
 	readonly request: string;
 	readonly result: unknown;
 	readonly createdAt: number;
-	readonly accessCount: number;
+	accessCount: number;
 }
 
 export interface ICouncilRequestDedup extends IDisposable {
@@ -47,18 +47,11 @@ export class CouncilRequestDedup extends Disposable implements ICouncilRequestDe
 	public async getOrExecute<T>(request: string, fn: () => Promise<T>, ttlMs: number = 300000): Promise<T> {
 		const hash = this.hashRequest(request);
 
-		const cached = this.resultCache.get<T>(hash);
-		if (cached !== undefined) {
-			this.totalHits++;
-			this.logService.debug(`[Council Dedup] Cache hit for request hash: ${hash.substring(0, 8)}`);
-			return cached;
-		}
-
 		const existing = this.entries.get(hash);
 		if (existing && Date.now() - existing.createdAt < ttlMs) {
 			this.totalHits++;
 			existing.accessCount++;
-			this.logService.debug(`[Council Dedup] In-flight hit for request hash: ${hash.substring(0, 8)}`);
+			this.logService.debug(`[Council Dedup] Cache hit for request hash: ${hash.substring(0, 8)}`);
 			return existing.result as T;
 		}
 
@@ -73,7 +66,7 @@ export class CouncilRequestDedup extends Disposable implements ICouncilRequestDe
 			accessCount: 1
 		});
 
-		this.resultCache.set(hash, result, ttlMs / 1000);
+		this.resultCache.set(hash, String(result), { ttl: ttlMs / 1000 });
 
 		this.logService.debug(`[Council Dedup] Executed and cached request hash: ${hash.substring(0, 8)}`);
 
@@ -82,7 +75,8 @@ export class CouncilRequestDedup extends Disposable implements ICouncilRequestDe
 
 	public getCachedResult<T>(request: string): T | undefined {
 		const hash = this.hashRequest(request);
-		return this.resultCache.get<T>(hash);
+		const entry = this.entries.get(hash);
+		return entry ? entry.result as T : undefined;
 	}
 
 	public clear(): void {

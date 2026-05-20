@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { Event, Emitter } from '../../../../../../base/common/event.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { Event, Emitter } from '../../../../../base/common/event.js';
 import { ICouncilTelemetryService } from './councilTelemetryService.js';
 
 export const ICouncilTokenBudget = createDecorator<ICouncilTokenBudget>('councilTokenBudget');
@@ -42,7 +42,7 @@ export interface BudgetStatus {
 export interface BudgetExceededEvent {
 	readonly limit: 'session' | 'minute' | 'hour' | 'cost';
 	readonly current: number;
-	readonly limit: number;
+	readonly limitValue: number;
 	readonly timestamp: number;
 }
 
@@ -134,7 +134,7 @@ export class CouncilTokenBudget extends Disposable implements ICouncilTokenBudge
 			this._onBudgetExceeded.fire({
 				limit: status.exceededLimit!,
 				current: status.sessionUsage.totalTokens,
-				limit: this.config.maxTokensPerSession,
+				limitValue: this.config.maxTokensPerSession,
 				timestamp: now
 			});
 

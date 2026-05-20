@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { generateUuid } from '../../../../../base/common/uuid.js';
 
 export const ICouncilResultCache = createDecorator<ICouncilResultCache>('councilResultCache');
 
@@ -15,8 +15,8 @@ export interface CacheEntry {
 	readonly result: string;
 	readonly metadata: Record<string, unknown>;
 	readonly createdAt: number;
-	readonly lastAccessed: number;
-	readonly accessCount: number;
+	lastAccessed: number;
+	accessCount: number;
 	readonly ttl: number;
 }
 
@@ -45,7 +45,6 @@ export interface ICouncilResultCache extends IDisposable {
 
 const DEFAULT_TTL = 24 * 60 * 60 * 1000;
 const MAX_CACHE_SIZE = 1000;
-const MAX_CACHE_BYTES = 50 * 1024 * 1024;
 
 export class CouncilResultCache extends Disposable implements ICouncilResultCache {
 	declare readonly _serviceBrand: undefined;
@@ -159,8 +158,7 @@ export class CouncilResultCache extends Disposable implements ICouncilResultCach
 		return evicted;
 	}
 
-	public static generateKey(roleId: string, taskDescription: string, context?: string): string {
-		const content = `${roleId}:${taskDescription}:${context ?? ''}`;
+	public static generateKey(roleId: string, _taskDescription: string, context?: string): string {
 		return generateUuid();
 	}
 

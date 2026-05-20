@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { IFileService } from '../../../../../../platform/files/common/files.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { ICouncilResultCache, CacheEntry } from './councilResultCache.js';
-import { VSBuffer } from '../../../../../../base/common/buffer.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { URI } from '../../../../../base/common/uri.js';
+import { ICouncilResultCache } from './councilResultCache.js';
+import { VSBuffer } from '../../../../../base/common/buffer.js';
 
 export const ICouncilDistributedCache = createDecorator<ICouncilDistributedCache>('councilDistributedCache');
 
@@ -34,7 +34,6 @@ export interface ICouncilDistributedCache extends IDisposable {
 export class CouncilDistributedCache extends Disposable implements ICouncilDistributedCache {
 	declare readonly _serviceBrand: undefined;
 
-	private readonly inMemoryCache: Map<string, CacheEntry>;
 	private config: DistributedCacheConfig;
 	private totalHits: number;
 	private totalMisses: number;
@@ -45,7 +44,6 @@ export class CouncilDistributedCache extends Disposable implements ICouncilDistr
 		@ICouncilResultCache private readonly resultCache: ICouncilResultCache
 	) {
 		super();
-		this.inMemoryCache = new Map();
 		this.config = {
 			cacheDir: 'council-cache',
 			maxFileSize: 10 * 1024 * 1024,
@@ -61,10 +59,10 @@ export class CouncilDistributedCache extends Disposable implements ICouncilDistr
 	}
 
 	public async get<T>(key: string): Promise<T | undefined> {
-		const memoryResult = this.resultCache.get<T>(key);
+		const memoryResult = this.resultCache.get(key);
 		if (memoryResult !== undefined) {
 			this.totalHits++;
-			return memoryResult;
+			return memoryResult as T;
 		}
 
 		try {
@@ -73,7 +71,7 @@ export class CouncilDistributedCache extends Disposable implements ICouncilDistr
 
 			if (exists) {
 				const content = await this.fileService.readFile(uri);
-				const entry = JSON.parse(content.value.toString()) as CacheEntry;
+				const entry = JSON.parse(content.value.toString()) as { value: T; expiresAt?: number };
 
 				if (entry.expiresAt && Date.now() > entry.expiresAt) {
 					await this.delete(key);
@@ -81,9 +79,9 @@ export class CouncilDistributedCache extends Disposable implements ICouncilDistr
 					return undefined;
 				}
 
-				this.resultCache.set(key, entry.value, Math.floor((entry.expiresAt - Date.now()) / 1000));
+				this.resultCache.set(key, JSON.stringify(entry.value));
 				this.totalHits++;
-				return entry.value as T;
+				return entry.value;
 			}
 		} catch (error) {
 			this.logService.debug(`[Council DistributedCache] File read failed: ${error}`);
@@ -94,11 +92,11 @@ export class CouncilDistributedCache extends Disposable implements ICouncilDistr
 	}
 
 	public async set<T>(key: string, value: T, ttlSeconds: number = 300): Promise<void> {
-		this.resultCache.set(key, value, ttlSeconds);
+		this.resultCache.set(key, JSON.stringify(value));
 
 		try {
 			const uri = this.getFileUri(key);
-			const entry: CacheEntry = {
+			const entry = {
 				key,
 				value,
 				createdAt: Date.now(),
@@ -120,7 +118,7 @@ export class CouncilDistributedCache extends Disposable implements ICouncilDistr
 			const uri = this.getFileUri(key);
 			const exists = await this.fileService.exists(uri);
 			if (exists) {
-				await this.fileService.delete(uri);
+				await this.fileService.del(uri);
 			}
 		} catch (error) {
 			this.logService.debug(`[Council DistributedCache] Delete failed: ${error}`);
