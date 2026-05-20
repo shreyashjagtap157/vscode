@@ -4,8 +4,27 @@
  *--------------------------------------------------------------------------------------------*/
 
 export * from './agentProfileManager.js';
-export * from './councilOrchestrator.js';
-export * from './councilCoordinator.js';
+export {
+	ICouncilOrchestrator,
+	CouncilTask,
+	CouncilSession,
+	TaskDecomposition,
+	CouncilResult,
+	DebateRecord as OrchestratorDebateRecord,
+	CouncilOrchestrator
+} from './councilOrchestrator.js';
+export {
+	IConsensusManager,
+	ConsensusStrategy,
+	EvidenceScore,
+	Contribution,
+	ConsensusResult,
+	DebatePosition,
+	DebateRecord as CoordinatorDebateRecord,
+	TaskComplexity,
+	ConsensusManager,
+	IterationGuard
+} from './councilCoordinator.js';
 export * from './councilParticipant.js';
 export * from './councilConfiguration.js';
 export * from './evidenceValidator.js';

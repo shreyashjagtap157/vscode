@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken, CancellationTokenSource } from '../../../../../../base/common/cancellation.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
+import { CancellationToken, CancellationTokenSource } from '../../../../../base/common/cancellation.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
 import { IAgentProfileManager, CouncilAgentProfile } from './agentProfileManager.js';
-import { ILanguageModelsService } from '../languageModels.js';
+import { ILanguageModelsService, ChatMessageRole, IChatMessage } from '../languageModels.js';
 import { ILanguageModelToolsService } from '../tools/languageModelToolsService.js';
 import { IChatService } from '../chatService/chatService.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
+import { generateUuid } from '../../../../../base/common/uuid.js';
 import { ICouncilCircuitBreaker } from './councilCircuitBreaker.js';
-import { ICouncilRetry, RetryResult } from './councilRetry.js';
-import { CouncilMutex, CouncilReadWriteLock } from './councilMutex.js';
+import { ICouncilRetry } from './councilRetry.js';
+import { CouncilReadWriteLock } from './councilMutex.js';
 import { ICouncilContextWindow, ContextWindowResult } from './councilContextWindow.js';
 import { ICouncilModelCache } from './councilModelCache.js';
 import { ICouncilConnectionPool } from './councilConnectionPool.js';
@@ -24,7 +24,7 @@ import { ICouncilSessionEviction } from './councilSessionEviction.js';
 import { ICouncilTelemetryService } from './councilTelemetryService.js';
 import { ICouncilTelemetrySampling } from './councilTelemetrySampling.js';
 import { ICouncilInputSanitizer } from './councilInputSanitizer.js';
-import { CouncilSession, CouncilResult, DebateRecord, CouncilTask, ICouncilOrchestrator } from './councilOrchestrator.js';
+import { CouncilSession, CouncilResult, DebateRecord, CouncilTask } from './councilOrchestrator.js';
 
 export const ICouncilEnhancedOrchestrator = createDecorator<ICouncilEnhancedOrchestrator>('councilEnhancedOrchestrator');
 
@@ -40,8 +40,8 @@ export interface ICouncilEnhancedOrchestrator extends IDisposable {
 	readonly _serviceBrand: undefined;
 
 	executeSessionEnhanced(request: string, selectedRoles?: string[], token?: CancellationToken): Promise<EnhancedCouncilResult>;
-	getSession(sessionId: string): CouncilSession | undefined;
-	getActiveSessions(): CouncilSession[];
+	getSession(sessionId: string): Promise<CouncilSession | undefined>;
+	getActiveSessions(): Promise<CouncilSession[]>;
 	cancelSession(sessionId: string): void;
 }
 
@@ -50,14 +50,13 @@ export class CouncilEnhancedOrchestrator extends Disposable implements ICouncilE
 
 	private readonly sessions: Map<string, CouncilSession>;
 	private readonly cancellationTokens: Map<string, CancellationTokenSource>;
-	private readonly sessionMutex: CouncilMutex;
 	private readonly stateLock: CouncilReadWriteLock;
 
 	constructor(
 		@IAgentProfileManager private readonly profileManager: IAgentProfileManager,
 		@ILanguageModelsService private readonly languageModelsService: ILanguageModelsService,
-		@ILanguageModelToolsService private readonly languageModelToolsService: ILanguageModelToolsService,
-		@IChatService private readonly chatService: IChatService,
+		@ILanguageModelToolsService _languageModelToolsService: ILanguageModelToolsService,
+		@IChatService _chatService: IChatService,
 		@ILogService private readonly logService: ILogService,
 		@ICouncilCircuitBreaker private readonly circuitBreaker: ICouncilCircuitBreaker,
 		@ICouncilRetry private readonly retry: ICouncilRetry,
@@ -68,13 +67,12 @@ export class CouncilEnhancedOrchestrator extends Disposable implements ICouncilE
 		@ICouncilRequestDedup private readonly requestDedup: ICouncilRequestDedup,
 		@ICouncilSessionEviction private readonly sessionEviction: ICouncilSessionEviction,
 		@ICouncilTelemetryService private readonly telemetryService: ICouncilTelemetryService,
-		@ICouncilTelemetrySampling private readonly telemetrySampling: ICouncilTelemetrySampling,
+		@ICouncilTelemetrySampling _telemetrySampling: ICouncilTelemetrySampling,
 		@ICouncilInputSanitizer private readonly inputSanitizer: ICouncilInputSanitizer
 	) {
 		super();
 		this.sessions = new Map();
 		this.cancellationTokens = new Map();
-		this.sessionMutex = new CouncilMutex();
 		this.stateLock = new CouncilReadWriteLock();
 	}
 
@@ -83,7 +81,7 @@ export class CouncilEnhancedOrchestrator extends Disposable implements ICouncilE
 		selectedRoles?: string[],
 		token: CancellationToken = CancellationToken.None
 	): Promise<EnhancedCouncilResult> {
-		const sanitizedRequest = this.inputSanitizer.sanitize(request).sanitized;
+		const sanitizedRequest = this.inputSanitizer.sanitizeInput(request).sanitizedText;
 
 		const cacheResult = await this.requestDedup.getOrExecute(
 			sanitizedRequest,
@@ -96,14 +94,15 @@ export class CouncilEnhancedOrchestrator extends Disposable implements ICouncilE
 
 	private async executeInternal(
 		request: string,
-		selectedRoles?: string[],
+		selectedRoles: string[] | undefined,
 		token: CancellationToken
 	): Promise<EnhancedCouncilResult> {
 		const sessionId = generateUuid();
 		const cts = new CancellationTokenSource();
+		const parentListener = token.onCancellationRequested(() => cts.cancel());
 		this.cancellationTokens.set(sessionId, cts);
 
-		const linkedToken = CancellationToken.any(token, cts.token);
+		const linkedToken = cts.token;
 		let retryAttempts = 0;
 		let cacheHit = false;
 
@@ -194,6 +193,7 @@ export class CouncilEnhancedOrchestrator extends Disposable implements ICouncilE
 
 			throw error;
 		} finally {
+			parentListener.dispose();
 			this.cancellationTokens.delete(sessionId);
 		}
 	}
@@ -201,7 +201,7 @@ export class CouncilEnhancedOrchestrator extends Disposable implements ICouncilE
 	private async decomposeRequest(
 		request: string,
 		selectedRoles?: string[],
-		token: CancellationToken
+		token: CancellationToken = CancellationToken.None
 	): Promise<import('./councilOrchestrator.js').TaskDecomposition> {
 		if (!this.circuitBreaker.canExecute('llm')) {
 			this.logService.warn('[Council Enhanced] Circuit breaker open, using default decomposition');
@@ -216,15 +216,23 @@ export class CouncilEnhancedOrchestrator extends Disposable implements ICouncilE
 
 			const response = await this.languageModelsService.sendChatRequest(
 				models[0].id,
-				'copilot',
-				[{ role: 'user', content: `Decompose: ${request}` }],
+				undefined,
+				[{ role: ChatMessageRole.User, content: [{ type: 'text', value: `Decompose: ${request}` }] }],
 				{},
-				{ token }
+				token
 			);
 
 			let responseText = '';
 			for await (const chunk of response.stream) {
-				responseText += chunk.text || '';
+				if (Array.isArray(chunk)) {
+					for (const part of chunk) {
+						if (part.type === 'text') {
+							responseText += part.value;
+						}
+					}
+				} else if (chunk.type === 'text') {
+					responseText += chunk.value;
+				}
 			}
 
 			this.circuitBreaker.recordSuccess('llm');
@@ -350,23 +358,31 @@ export class CouncilEnhancedOrchestrator extends Disposable implements ICouncilE
 
 		if (!modelId) throw new Error('No model available');
 
-		const messages = [
-			{ role: 'system' as const, content: this.profileManager.buildSystemPrompt(profile.roleId, context) },
-			{ role: 'user' as const, content: taskDescription }
+		const messages: IChatMessage[] = [
+			{ role: ChatMessageRole.System, content: [{ type: 'text', value: this.profileManager.buildSystemPrompt(profile.roleId, context) }] },
+			{ role: ChatMessageRole.User, content: [{ type: 'text', value: taskDescription }] }
 		];
 
 		const response = await this.languageModelsService.sendChatRequest(
 			modelId,
-			'copilot',
+			undefined,
 			messages,
 			{ max_tokens: profile.maxTokens || 4000, temperature: profile.temperature ?? 0.7 },
-			{ token }
+			token
 		);
 
 		let result = '';
 		for await (const chunk of response.stream) {
 			if (token.isCancellationRequested) break;
-			result += chunk.text || '';
+			if (Array.isArray(chunk)) {
+				for (const part of chunk) {
+					if (part.type === 'text') {
+						result += part.value;
+					}
+				}
+			} else if (chunk.type === 'text') {
+				result += chunk.value;
+			}
 		}
 
 		return result || `[${profile.displayName}] Completed`;
@@ -382,7 +398,6 @@ export class CouncilEnhancedOrchestrator extends Disposable implements ICouncilE
 
 	private async synthesizeResult(session: CouncilSession): Promise<CouncilResult> {
 		const contributions = Array.from(session.contributions.entries());
-		const successfulTasks = session.activeTaskGraph.filter(t => t.status === 'completed');
 		const failedTasks = session.activeTaskGraph.filter(t => t.status === 'failed');
 
 		const confidence = this.calculateConfidence(session);
