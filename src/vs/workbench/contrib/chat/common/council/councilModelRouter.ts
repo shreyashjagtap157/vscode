@@ -3,10 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { ILanguageModelsService } from '../languageModels.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
 
 export const ICouncilModelRouter = createDecorator<ICouncilModelRouter>('councilModelRouter');
 
@@ -46,14 +45,7 @@ export interface ICouncilModelRouter extends IDisposable {
 	getEstimatedCost(modelId: string, tokenCount: number): number;
 }
 
-const MODEL_TIER_DEFAULTS: Record<ModelTier, { minTokens: number; maxTokens: number; description: string }> = {
-	fast: { minTokens: 0, maxTokens: 2000, description: 'Simple tasks, quick responses' },
-	balanced: { minTokens: 2000, maxTokens: 8000, description: 'Moderate complexity tasks' },
-	premium: { minTokens: 8000, maxTokens: 32000, description: 'Complex reasoning and analysis' },
-	specialized: { minTokens: 0, maxTokens: 128000, description: 'Specialized tasks requiring specific capabilities' }
-};
-
-const COMPLEXITY_KEYWORDS: Record<string, TaskComplexity['complexity']> = {
+const COMPLEXITY_KEYWORDS: Record<string, string[]> = {
 	'simple': ['list', 'format', 'convert', 'rename', 'count', 'find', 'show', 'what is'],
 	'moderate': ['explain', 'compare', 'analyze', 'review', 'suggest', 'improve', 'refactor', 'optimize'],
 	'complex': ['architect', 'design', 'implement', 'build', 'create', 'develop', 'migrate', 'transform'],
@@ -66,8 +58,7 @@ export class CouncilModelRouter extends Disposable implements ICouncilModelRoute
 	private readonly modelCache: Map<string, ModelInfo>;
 
 	constructor(
-		@ILogService private readonly logService: ILogService,
-		@ILanguageModelsService private readonly languageModelsService: ILanguageModelsService
+		@ILogService private readonly logService: ILogService
 	) {
 		super();
 		this.modelCache = new Map();

@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { CancellationToken } from '../../../../../base/common/cancellation.js';
 import { ICouncilOrchestrator, CouncilResult } from './councilOrchestrator.js';
-import { ICouncilTestRunner, TestSuite, TestStatus } from './councilTestRunner.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
-import { Emitter, Event } from '../../../../../../base/common/event.js';
+import { ICouncilTestRunner } from './councilTestRunner.js';
+import { generateUuid } from '../../../../../base/common/uuid.js';
+import { Emitter, Event } from '../../../../../base/common/event.js';
 
 export const ICouncilCIRunner = createDecorator<ICouncilCIRunner>('councilCIRunner');
 
@@ -90,7 +90,7 @@ export class CouncilCIRunner extends Disposable implements ICouncilCIRunner {
 	constructor(
 		@ILogService private readonly logService: ILogService,
 		@ICouncilOrchestrator private readonly orchestrator: ICouncilOrchestrator,
-		@ICouncilTestRunner private readonly testRunner: ICouncilTestRunner
+		@ICouncilTestRunner _testRunner: ICouncilTestRunner
 	) {
 		super();
 		this.logService.info('[CouncilCIRunner] Initialized');
@@ -226,7 +226,7 @@ Provide a detailed fix with code changes. Include the exact file paths and line 
 			}
 		];
 
-		for (const { regex, type, extractor } of patterns) {
+		for (const { regex, extractor } of patterns) {
 			let match;
 			while ((match = regex.exec(output)) !== null) {
 				try {

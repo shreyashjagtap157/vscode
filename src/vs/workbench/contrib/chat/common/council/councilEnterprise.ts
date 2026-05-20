@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { ICouncilOrchestrator, CouncilResult } from './councilOrchestrator.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { ICouncilOrchestrator } from './councilOrchestrator.js';
 import { ICouncilPRReviewBoard, PRReviewResult, PRReviewRequest } from './councilPRReview.js';
-import { ICouncilGovernance, GovernanceActionType, GovernanceSeverity } from './councilGovernance.js';
-import { Event, Emitter } from '../../../../../../base/common/event.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
+import { ICouncilGovernance, GovernanceActionType } from './councilGovernance.js';
+import { Event, Emitter } from '../../../../../base/common/event.js';
+import { generateUuid } from '../../../../../base/common/uuid.js';
 
 export const ICouncilEnterprise = createDecorator<ICouncilEnterprise>('councilEnterprise');
 
@@ -232,8 +232,6 @@ export class CouncilEnterprise extends Disposable implements ICouncilEnterprise 
 			);
 
 			const review = await this.prReviewBoard.reviewPR(prRequest);
-
-			const reviewBody = this.prReviewBoard.generateReviewSummary(review);
 
 			const syncResult: EnterpriseSyncResult = {
 				syncId,

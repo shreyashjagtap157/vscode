@@ -3,14 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { ICouncilOrchestrator, CouncilSession, CouncilResult } from './councilOrchestrator.js';
-import { IAgentProfileManager } from './agentProfileManager.js';
-import { IDebateResolver, DebateRecord } from './debateResolver.js';
-import { Emitter, Event } from '../../../../../../base/common/event.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { CouncilResult } from './councilOrchestrator.js';
+import { Emitter, Event } from '../../../../../base/common/event.js';
 
 export const ICouncilSessionManager = createDecorator<ICouncilSessionManager>('councilSessionManager');
 
@@ -53,10 +50,7 @@ export class CouncilSessionManager extends Disposable implements ICouncilSession
 	private readonly MAX_HISTORY = 100;
 
 	constructor(
-		@ILogService private readonly logService: ILogService,
-		@ICouncilOrchestrator private readonly orchestrator: ICouncilOrchestrator,
-		@IAgentProfileManager private readonly profileManager: IAgentProfileManager,
-		@IDebateResolver private readonly debateResolver: IDebateResolver
+		@ILogService private readonly logService: ILogService
 	) {
 		super();
 		this.logService.info('[CouncilSessionManager] Initialized');

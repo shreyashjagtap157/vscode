@@ -3,14 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { ICouncilOrchestrator, CouncilResult } from './councilOrchestrator.js';
-import { IAgentProfileManager, CouncilAgentProfile } from './agentProfileManager.js';
-import { IEvidenceValidator, EvidenceScore } from './evidenceValidator.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { CancellationToken } from '../../../../../base/common/cancellation.js';
+import { generateUuid } from '../../../../../base/common/uuid.js';
 
 export const IRedTeamAgent = createDecorator<IRedTeamAgent>('redTeamAgent');
 
@@ -78,7 +75,7 @@ export interface IRedTeamAgent extends IDisposable {
 	runSecurityReview(proposal: string, sessionId: string, token?: CancellationToken): Promise<RedTeamReport>;
 	simulateAttack(proposal: string, attackType: string, token?: CancellationToken): Promise<AttackSimulation>;
 	checkOWASPTop10(proposal: string): Promise<Vulnerability[]>;
-	checkDependencyRisks(proposal: string): Promise<Vulnerability[]>;
+	checkDependencyRisks(proposal: string): Vulnerability[];
 	calculateRiskScore(vulnerabilities: Vulnerability[]): number;
 }
 
@@ -94,10 +91,7 @@ export class RedTeamAgent extends Disposable implements IRedTeamAgent {
 	};
 
 	constructor(
-		@ILogService private readonly logService: ILogService,
-		@ICouncilOrchestrator private readonly orchestrator: ICouncilOrchestrator,
-		@IAgentProfileManager private readonly profileManager: IAgentProfileManager,
-		@IEvidenceValidator private readonly evidenceValidator: IEvidenceValidator
+		@ILogService private readonly logService: ILogService
 	) {
 		super();
 		this.logService.info('[RedTeamAgent] Initialized');
@@ -113,7 +107,7 @@ export class RedTeamAgent extends Disposable implements IRedTeamAgent {
 		const vulnerabilities: Vulnerability[] = [];
 
 		vulnerabilities.push(...await this.checkOWASPTop10(proposal));
-		vulnerabilities.push(...await this.checkDependencyRisks(proposal));
+		vulnerabilities.push(...this.checkDependencyRisks(proposal));
 		vulnerabilities.push(...this.checkAuthenticationFlaws(proposal));
 		vulnerabilities.push(...this.checkAuthorizationIssues(proposal));
 		vulnerabilities.push(...this.checkDataExposure(proposal));
@@ -215,7 +209,7 @@ export class RedTeamAgent extends Disposable implements IRedTeamAgent {
 		return vulnerabilities;
 	}
 
-	public async checkDependencyRisks(proposal: string): Promise<Vulnerability[]> {
+	public checkDependencyRisks(proposal: string): Vulnerability[] {
 		const vulnerabilities: Vulnerability[] = [];
 
 		const dependencyPatterns = [

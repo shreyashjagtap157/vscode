@@ -3,14 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
 import { ICouncilOrchestrator, CouncilResult } from './councilOrchestrator.js';
-import { IAgentProfileManager, CouncilAgentProfile } from './agentProfileManager.js';
-import { ICouncilPolicyEngine, PolicyEvaluation, PolicyViolation } from './councilPolicies.js';
-import { Event, Emitter } from '../../../../../../base/common/event.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
+import { ICouncilPolicyEngine, PolicyViolation } from './councilPolicies.js';
+import { Event, Emitter } from '../../../../../base/common/event.js';
+import { generateUuid } from '../../../../../base/common/uuid.js';
 
 export const ICouncilPRReviewBoard = createDecorator<ICouncilPRReviewBoard>('councilPRReviewBoard');
 
@@ -151,7 +150,6 @@ export class CouncilPRReviewBoard extends Disposable implements ICouncilPRReview
 
 	constructor(
 		@ICouncilOrchestrator private readonly orchestrator: ICouncilOrchestrator,
-		@IAgentProfileManager private readonly profileManager: IAgentProfileManager,
 		@ICouncilPolicyEngine private readonly policyEngine: ICouncilPolicyEngine,
 		@ILogService private readonly logService: ILogService
 	) {

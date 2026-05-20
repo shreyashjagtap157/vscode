@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { IFileService, IFileStatWithMetadata } from '../../../../../../platform/files/common/files.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { Event, Emitter } from '../../../../../../base/common/event.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { URI } from '../../../../../base/common/uri.js';
+import { Event, Emitter } from '../../../../../base/common/event.js';
+import { generateUuid } from '../../../../../base/common/uuid.js';
 
 export const ICouncilPolicyEngine = createDecorator<ICouncilPolicyEngine>('councilPolicyEngine');
 
@@ -48,6 +48,7 @@ export interface PolicyViolation {
 	readonly matchedText: string;
 	readonly context: string;
 	readonly timestamp: number;
+	readonly sessionId?: string;
 }
 
 export interface PolicyEvaluation {
@@ -335,7 +336,8 @@ export class CouncilPolicyEngine extends Disposable implements ICouncilPolicyEng
 							category: rule.category,
 							matchedText: match[0],
 							context: this.extractContext(contribution, match.index, 100),
-							timestamp: Date.now()
+							timestamp: Date.now(),
+							sessionId
 						};
 						violations.push(violation);
 						this.violationHistory.push(violation);

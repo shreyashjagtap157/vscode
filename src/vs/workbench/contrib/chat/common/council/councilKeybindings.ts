@@ -3,12 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { ICommandService } from '../../../../../../platform/commands/common/commands.js';
-import { IKeybindingService } from '../../../../../../platform/keybinding/common/keybinding.js';
-import { KeyMod, KeyCode } from '../../../../../../base/common/keyCodes.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { ICommandService } from '../../../../../platform/commands/common/commands.js';
+import { KeyMod, KeyCode } from '../../../../../base/common/keyCodes.js';
 import { ICouncilTelemetryService } from './councilTelemetryService.js';
 
 export const ICouncilKeybindings = createDecorator<ICouncilKeybindings>('councilKeybindings');
@@ -39,7 +38,6 @@ export class CouncilKeybindings extends Disposable implements ICouncilKeybinding
 
 	constructor(
 		@ICommandService private readonly commandService: ICommandService,
-		@IKeybindingService private readonly keybindingService: IKeybindingService,
 		@ILogService private readonly logService: ILogService,
 		@ICouncilTelemetryService private readonly telemetryService: ICouncilTelemetryService
 	) {

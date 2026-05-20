@@ -3,9 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
 import { ICouncilCircuitBreaker } from './councilCircuitBreaker.js';
 import { ICouncilSessionEviction } from './councilSessionEviction.js';
 import { ICouncilModelCache } from './councilModelCache.js';
@@ -48,7 +47,6 @@ export class CouncilHealthCheck extends Disposable implements ICouncilHealthChec
 	private readonly startTime: number;
 
 	constructor(
-		@ILogService private readonly logService: ILogService,
 		@ICouncilCircuitBreaker private readonly circuitBreaker: ICouncilCircuitBreaker,
 		@ICouncilSessionEviction private readonly sessionEviction: ICouncilSessionEviction,
 		@ICouncilModelCache private readonly modelCache: ICouncilModelCache,
@@ -124,8 +122,8 @@ export class CouncilHealthCheck extends Disposable implements ICouncilHealthChec
 
 			return {
 				name: 'circuitBreaker',
-				status: openCircuit === 0 ? 'healthy' : openCircuit <= 2 ? 'degraded' : 'unhealthy',
-				message: `${stats.size} services monitored, ${openCircuit} circuits open`,
+				status: openCircuits === 0 ? 'healthy' : openCircuits <= 2 ? 'degraded' : 'unhealthy',
+				message: `${stats.size} services monitored, ${openCircuits} circuits open`,
 				lastChecked: Date.now()
 			};
 		});

@@ -3,9 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
 
 export const ICouncilSearchFilter = createDecorator<ICouncilSearchFilter>('councilSearchFilter');
 
@@ -55,19 +54,17 @@ export interface ICouncilSearchFilter extends IDisposable {
 export class CouncilSearchFilter extends Disposable implements ICouncilSearchFilter {
 	declare readonly _serviceBrand: undefined;
 
-	private readonly index: Map<string, SearchableItem>;
+	private readonly _index: Map<string, SearchableItem>;
 	private readonly invertedIndex: Map<string, Set<string>>;
 
-	constructor(
-		@ILogService private readonly logService: ILogService
-	) {
+	constructor() {
 		super();
-		this.index = new Map();
+		this._index = new Map();
 		this.invertedIndex = new Map();
 	}
 
 	public index(item: SearchableItem): void {
-		this.index.set(item.id, item);
+		this._index.set(item.id, item);
 
 		const words = this.tokenize(item.searchableText);
 		for (const word of words) {
@@ -84,10 +81,10 @@ export class CouncilSearchFilter extends Disposable implements ICouncilSearchFil
 	}
 
 	public remove(id: string): void {
-		const item = this.index.get(id);
+		const item = this._index.get(id);
 		if (!item) return;
 
-		this.index.delete(id);
+		this._index.delete(id);
 
 		for (const [word, ids] of this.invertedIndex) {
 			ids.delete(id);
@@ -98,11 +95,11 @@ export class CouncilSearchFilter extends Disposable implements ICouncilSearchFil
 	}
 
 	public search<T extends SearchableItem>(query: SearchQuery): SearchResult<T> {
-		let candidateIds = new Set(this.index.keys());
+		let candidateIds = new Set(this._index.keys());
 
 		if (query.text) {
 			const words = this.tokenize(query.text);
-			const wordResults = words.map(w => this.invertedIndex.get(w) ?? new Set());
+			const wordResults = words.map(w => this.invertedIndex.get(w) ?? new Set<string>());
 			candidateIds = wordResults.reduce((a, b) => new Set([...a].filter(x => b.has(x))));
 		}
 
@@ -129,17 +126,19 @@ export class CouncilSearchFilter extends Disposable implements ICouncilSearchFil
 			}
 		}
 
-		let items = Array.from(candidateIds)
-			.map(id => this.index.get(id))
-			.filter((item): item is T => item !== undefined);
-
-		items = this.sortItems(items, query.sortBy, query.sortOrder);
+		const items = this.sortItems(
+			Array.from(candidateIds)
+				.map(id => this._index.get(id))
+				.filter((item): item is SearchableItem => item !== undefined),
+			query.sortBy,
+			query.sortOrder
+		);
 
 		const total = items.length;
-		items = items.slice(query.offset, query.offset + query.limit);
+		const pagedItems = items.slice(query.offset, query.offset + query.limit);
 
 		return {
-			items,
+			items: pagedItems as T[],
 			total,
 			hasMore: query.offset + query.limit < total,
 			query
@@ -162,13 +161,13 @@ export class CouncilSearchFilter extends Disposable implements ICouncilSearchFil
 
 	public getStats(): { totalIndexed: number; indexSize: number } {
 		return {
-			totalIndexed: this.index.size,
+			totalIndexed: this._index.size,
 			indexSize: this.invertedIndex.size
 		};
 	}
 
 	public clear(): void {
-		this.index.clear();
+		this._index.clear();
 		this.invertedIndex.clear();
 	}
 
@@ -182,7 +181,7 @@ export class CouncilSearchFilter extends Disposable implements ICouncilSearchFil
 
 	private filterByField(ids: Set<string>, field: string, values: string[]): Set<string> {
 		return new Set([...ids].filter(id => {
-			const item = this.index.get(id);
+			const item = this._index.get(id);
 			if (!item) return false;
 			const fieldValue = String((item.metadata as any)[field] ?? '');
 			return values.some(v => fieldValue.toLowerCase().includes(v.toLowerCase()));
@@ -191,14 +190,14 @@ export class CouncilSearchFilter extends Disposable implements ICouncilSearchFil
 
 	private filterByDate(ids: Set<string>, range: { start: number; end: number }): Set<string> {
 		return new Set([...ids].filter(id => {
-			const item = this.index.get(id);
+			const item = this._index.get(id);
 			return item && item.timestamp >= range.start && item.timestamp <= range.end;
 		}));
 	}
 
 	private filterByConfidence(ids: Set<string>, range: { min: number; max: number }): Set<string> {
 		return new Set([...ids].filter(id => {
-			const item = this.index.get(id);
+			const item = this._index.get(id);
 			if (!item) return false;
 			const confidence = (item.metadata as any).confidence ?? 0;
 			return confidence >= range.min && confidence <= range.max;

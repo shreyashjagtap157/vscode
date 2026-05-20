@@ -3,13 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { IFileService } from '../../../../../../platform/files/common/files.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { IWorkingCopyFileService } from '../../../../services/workingCopy/common/workingCopyFileService.js';
-import { Event, Emitter } from '../../../../../../base/common/event.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { URI } from '../../../../../base/common/uri.js';
+import { Event, Emitter } from '../../../../../base/common/event.js';
 
 export const ICouncilFixApplier = createDecorator<ICouncilFixApplier>('councilFixApplier');
 
@@ -143,7 +142,6 @@ export class CouncilFixApplier extends Disposable implements ICouncilFixApplier 
 
 		let fixIndex = 0;
 		while ((match = codeBlockPattern.exec(markdown)) !== null) {
-			const lang = match[1];
 			const code = match[2];
 
 			const beforeBlock = markdown.substring(0, match.index);
