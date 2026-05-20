@@ -182,23 +182,7 @@ function createTestRedTeam(): RedTeamAgent {
 		debug: () => {}
 	};
 
-	const mockOrchestrator = {
-		executeSession: () => Promise.resolve({ status: 'success' })
-	};
-
-	const mockProfileManager = {
-		getProfile: () => ({ roleId: 'security' }),
-		getAllProfiles: () => []
-	};
-
-	const mockEvidenceValidator = {
-		scoreEvidence: () => Promise.resolve({ confidenceScore: 0.5 })
-	};
-
 	return new RedTeamAgent(
-		mockLogService as any,
-		mockOrchestrator as any,
-		mockProfileManager as any,
-		mockEvidenceValidator as any
+		mockLogService as any
 	);
 }

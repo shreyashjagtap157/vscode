@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { CouncilPolicyEngine, ICouncilPolicyEngine, PolicySeverity, EngineeringPolicy, PolicyViolation } from '../councilPolicies.js';
-import { URI } from '../../../../../../../base/common/uri.js';
+import { CouncilPolicyEngine, PolicySeverity, PolicyViolation } from '../councilPolicies.js';
+import { URI } from '../../../../../../base/common/uri.js';
 
 class MockFileService {
 	private readonly existingFiles: Set<string>;
@@ -290,7 +290,7 @@ suite('CouncilPolicyEngine', () => {
 		});
 
 		const tsResult = await engine.evaluateContribution('const x: any = 1;', 'ts-session', 'typescript');
-		const jsResult = await engine.evaluateContribution('const x: any = 1;', 'js-session', 'javascript');
+		await engine.evaluateContribution('const x: any = 1;', 'js-session', 'javascript');
 
 		assert.ok(tsResult.violations.length >= 1, 'TypeScript should trigger violation');
 	});

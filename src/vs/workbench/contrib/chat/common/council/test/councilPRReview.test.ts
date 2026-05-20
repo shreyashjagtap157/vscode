@@ -4,10 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { CouncilPRReviewBoard, PRReviewRequest, PRReviewConfig, ReviewVerdict, PRFileInfo } from '../councilPRReview.js';
-import { CouncilOrchestrator, ICouncilOrchestrator, CouncilResult } from '../councilOrchestrator.js';
-import { AgentProfileManager, IAgentProfileManager } from '../agentProfileManager.js';
-import { CouncilPolicyEngine, ICouncilPolicyEngine } from '../councilPolicies.js';
+import { CouncilPRReviewBoard, PRReviewRequest, PRReviewConfig, ReviewVerdict } from '../councilPRReview.js';
+import { ICouncilOrchestrator, CouncilResult } from '../councilOrchestrator.js';
+import { ICouncilPolicyEngine } from '../councilPolicies.js';
 
 class MockOrchestrator implements ICouncilOrchestrator {
 	declare readonly _serviceBrand: undefined;
@@ -34,17 +33,6 @@ class MockOrchestrator implements ICouncilOrchestrator {
 	getSession(sessionId: string) { return this.sessions.get(sessionId); }
 	getActiveSessions() { return []; }
 	cancelSession(sessionId: string) { this.sessions.delete(sessionId); }
-	dispose() { }
-}
-
-class MockProfileManager implements IAgentProfileManager {
-	declare readonly _serviceBrand: undefined;
-	getAllProfiles() { return []; }
-	getProfile(roleId: string) { return undefined as any; }
-	registerProfile(profile: any) { }
-	updateProfile(roleId: string, updates: Partial<any>) { }
-	buildSystemPrompt(roleId: string, context?: string) { return ''; }
-	buildToolFilter(roleId: string) { return { allowed: [], excluded: [] }; }
 	dispose() { }
 }
 
@@ -91,10 +79,9 @@ class MockLogService {
 
 function createPRReviewBoard(): CouncilPRReviewBoard {
 	const orchestrator = new MockOrchestrator() as any;
-	const profileManager = new MockProfileManager() as any;
 	const policyEngine = new MockPolicyEngine() as any;
 	const logService = new MockLogService() as any;
-	return new CouncilPRReviewBoard(orchestrator, profileManager, policyEngine, logService);
+	return new CouncilPRReviewBoard(orchestrator, policyEngine, logService);
 }
 
 function createMockPRRequest(): PRReviewRequest {
@@ -301,7 +288,6 @@ suite('CouncilPRReviewBoard', () => {
 
 		const board = new CouncilPRReviewBoard(
 			failingOrchestrator,
-			new MockProfileManager() as any,
 			new MockPolicyEngine() as any,
 			new MockLogService() as any
 		);

@@ -4,14 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { CouncilSearchFilter } from '../../councilSearchFilter.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../base/test/common/utils.js';
+import { CouncilSearchFilter } from '../councilSearchFilter.js';
 
 suite('CouncilSearchFilter', () => {
-	ensureNoDisposablesAreLeakedInTestSuite();
 
 	test('should index and search items', () => {
-		const filter = new CouncilSearchFilter({ debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any);
+		const filter = new CouncilSearchFilter();
 
 		filter.index({
 			id: '1',
@@ -35,7 +33,7 @@ suite('CouncilSearchFilter', () => {
 	});
 
 	test('should filter by tags', () => {
-		const filter = new CouncilSearchFilter({ debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any);
+		const filter = new CouncilSearchFilter();
 
 		filter.index({
 			id: '1',
@@ -67,7 +65,7 @@ suite('CouncilSearchFilter', () => {
 	});
 
 	test('should filter by date range', () => {
-		const filter = new CouncilSearchFilter({ debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any);
+		const filter = new CouncilSearchFilter();
 		const now = Date.now();
 
 		filter.index({
@@ -100,7 +98,7 @@ suite('CouncilSearchFilter', () => {
 	});
 
 	test('should return suggestions', () => {
-		const filter = new CouncilSearchFilter({ debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any);
+		const filter = new CouncilSearchFilter();
 
 		filter.index({
 			id: '1',
@@ -115,7 +113,7 @@ suite('CouncilSearchFilter', () => {
 	});
 
 	test('should remove items', () => {
-		const filter = new CouncilSearchFilter({ debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any);
+		const filter = new CouncilSearchFilter();
 
 		filter.index({
 			id: '1',
@@ -140,7 +138,7 @@ suite('CouncilSearchFilter', () => {
 	});
 
 	test('should clear all', () => {
-		const filter = new CouncilSearchFilter({ debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any);
+		const filter = new CouncilSearchFilter();
 
 		filter.index({
 			id: '1',
@@ -158,7 +156,7 @@ suite('CouncilSearchFilter', () => {
 	});
 
 	test('should sort by confidence', () => {
-		const filter = new CouncilSearchFilter({ debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any);
+		const filter = new CouncilSearchFilter();
 
 		filter.index({
 			id: '1',

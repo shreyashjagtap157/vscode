@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { CouncilEnterprise, IntegrationType, IntegrationStatus, EnterpriseSyncResult } from '../councilEnterprise.js';
-import { CouncilOrchestrator, ICouncilOrchestrator, CouncilResult } from '../councilOrchestrator.js';
-import { CouncilPRReviewBoard, ICouncilPRReviewBoard, PRReviewResult, ReviewVerdict } from '../councilPRReview.js';
-import { CouncilGovernance, ICouncilGovernance } from '../councilGovernance.js';
+import { CouncilEnterprise, IntegrationType, IntegrationStatus } from '../councilEnterprise.js';
+import { ICouncilOrchestrator, CouncilResult } from '../councilOrchestrator.js';
+import { ICouncilPRReviewBoard, PRReviewResult, ReviewVerdict } from '../councilPRReview.js';
+import { ICouncilGovernance, GovernanceActionType, GovernanceCheckResult } from '../councilGovernance.js';
 
 class MockOrchestrator implements ICouncilOrchestrator {
 	declare readonly _serviceBrand: undefined;
@@ -93,8 +93,8 @@ class MockGovernance implements ICouncilGovernance {
 	getGovernancePolicies() { return []; }
 	addPolicy(policy: any) { return ''; }
 	removePolicy(id: string) { }
-	checkAction(actionType: any, context: any) {
-		return { allowed: true, requiresApproval: false, message: 'OK', severity: 'info' };
+	checkAction(actionType: GovernanceActionType, context: Record<string, unknown>): GovernanceCheckResult {
+		return { allowed: true, requiresApproval: false, message: 'OK', severity: 'info' as any };
 	}
 	generateReport(period?: any) {
 		return {

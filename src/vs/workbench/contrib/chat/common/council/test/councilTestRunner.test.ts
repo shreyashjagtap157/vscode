@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { CouncilTestRunner, TestStatus } from '../councilTestRunner.js';
+import { CouncilTestRunner } from '../councilTestRunner.js';
 
 suite('CouncilTestRunner - Phase 2', () => {
 
@@ -123,17 +123,7 @@ function createTestRunner(): CouncilTestRunner {
 		debug: () => {}
 	};
 
-	const mockTerminalService = {
-		createTerminal: () => Promise.reject(new Error('Terminal not available in tests'))
-	};
-
-	const mockWorkspaceService = {
-		getWorkspace: () => ({ folders: [] })
-	};
-
 	return new CouncilTestRunner(
-		mockLogService as any,
-		mockTerminalService as any,
-		mockWorkspaceService as any
+		mockLogService as any
 	);
 }

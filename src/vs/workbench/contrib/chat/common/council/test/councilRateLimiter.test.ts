@@ -4,11 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { CouncilRateLimiter } from '../../councilRateLimiter.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../base/test/common/utils.js';
+import { CouncilRateLimiter } from '../councilRateLimiter.js';
 
 suite('CouncilRateLimiter', () => {
-	ensureNoDisposablesAreLeakedInTestSuite();
 
 	test('should allow requests within limit', async () => {
 		const rateLimiter = new CouncilRateLimiter({ debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any);

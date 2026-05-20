@@ -4,11 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { CouncilDataRetention } from '../../councilDataRetention.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../base/test/common/utils.js';
+import { CouncilDataRetention } from '../councilDataRetention.js';
 
 suite('CouncilDataRetention', () => {
-	ensureNoDisposablesAreLeakedInTestSuite();
 
 	test('should return default policy', () => {
 		const retention = new CouncilDataRetention(

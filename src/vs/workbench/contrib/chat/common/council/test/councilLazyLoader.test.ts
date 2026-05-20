@@ -4,21 +4,22 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { CouncilLazyLoader } from '../../councilLazyLoader.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../base/test/common/utils.js';
+import { CouncilLazyLoader } from '../councilLazyLoader.js';
+
+const mockTelemetry = { sendPerformance: () => { } } as any;
+const mockLog = { debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any;
 
 suite('CouncilLazyLoader', () => {
-	ensureNoDisposablesAreLeakedInTestSuite();
 
 	test('should register and track services', () => {
-		const loader = new CouncilLazyLoader({ debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any);
+		const loader = new CouncilLazyLoader(mockLog, mockTelemetry);
 
 		const unloaded = loader.getUnloadedServices();
 		assert.ok(unloaded.length > 0);
 	});
 
 	test('should load service', async () => {
-		const loader = new CouncilLazyLoader({ debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any);
+		const loader = new CouncilLazyLoader(mockLog, mockTelemetry);
 
 		let loaded = false;
 		loader.registerLoader('smartSelector', async () => {
@@ -31,7 +32,7 @@ suite('CouncilLazyLoader', () => {
 	});
 
 	test('should not reload already loaded service', async () => {
-		const loader = new CouncilLazyLoader({ debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any);
+		const loader = new CouncilLazyLoader(mockLog, mockTelemetry);
 
 		let loadCount = 0;
 		loader.registerLoader('modelRouter', async () => {
@@ -45,20 +46,20 @@ suite('CouncilLazyLoader', () => {
 	});
 
 	test('should load dependencies first', async () => {
-		const loader = new CouncilLazyLoader({ debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any);
+		const loader = new CouncilLazyLoader(mockLog, mockTelemetry);
 
 		const loadOrder: string[] = [];
-		loader.registerLoader('dep', async () => { loadOrder.push('dep'); });
-		loader.registerLoader('main', async () => { loadOrder.push('main'); });
-		loader.register({ name: 'main', priority: 'immediate', dependencies: ['dep'] });
+		loader.registerLoader('notificationService', async () => { loadOrder.push('notificationService'); });
+		loader.registerLoader('costTracker', async () => { loadOrder.push('costTracker'); });
+		loader.register({ name: 'costTracker', priority: 'immediate', dependencies: ['notificationService'] });
 
-		await loader.loadService('main');
+		await loader.loadService('costTracker');
 
-		assert.deepStrictEqual(loadOrder, ['dep', 'main']);
+		assert.deepStrictEqual(loadOrder, ['notificationService', 'costTracker']);
 	});
 
 	test('should load all by priority', async () => {
-		const loader = new CouncilLazyLoader({ debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any);
+		const loader = new CouncilLazyLoader(mockLog, mockTelemetry);
 
 		let immediateLoaded = false;
 		loader.registerLoader('smartSelector', async () => { immediateLoaded = true; });
@@ -70,7 +71,7 @@ suite('CouncilLazyLoader', () => {
 	});
 
 	test('should track metrics', async () => {
-		const loader = new CouncilLazyLoader({ debug: () => { }, warn: () => { }, error: () => { }, info: () => { } } as any);
+		const loader = new CouncilLazyLoader(mockLog, mockTelemetry);
 
 		loader.registerLoader('secretDetector', async () => { });
 

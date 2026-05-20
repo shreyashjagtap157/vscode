@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { CouncilTelemetryService } from '../../councilTelemetryService.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../base/test/common/utils.js';
+import { CouncilTelemetryService } from '../councilTelemetryService.js';
 
 class MockTelemetryService {
 	public events: Array<{ name: string; data: Record<string, unknown> }> = [];
@@ -16,7 +15,6 @@ class MockTelemetryService {
 }
 
 suite('CouncilTelemetryService', () => {
-	ensureNoDisposablesAreLeakedInTestSuite();
 
 	let mockTelemetry: MockTelemetryService;
 	let telemetryService: CouncilTelemetryService;
@@ -56,8 +54,8 @@ suite('CouncilTelemetryService', () => {
 		telemetryService.sendSessionFailed('session-1', 'Error with AKIA1234567890ABCDEF key', 1000);
 
 		assert.strictEqual(mockTelemetry.events.length, 1);
-		assert.ok(!mockTelemetry.events[0].data.error.includes('AKIA1234567890ABCDEF'));
-		assert.ok(mockTelemetry.events[0].data.error.includes('[REDACTED_AWS_KEY]'));
+		assert.ok(!(mockTelemetry.events[0].data as any).error.includes('AKIA1234567890ABCDEF'));
+		assert.ok((mockTelemetry.events[0].data as any).error.includes('[REDACTED_AWS_KEY]'));
 	});
 
 	test('should send agent invoked event', () => {

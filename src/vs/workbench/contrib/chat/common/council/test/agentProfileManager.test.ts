@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { AgentProfileManager, DEFAULT_COUNCIL_PROFILES, ProfileValidationError, COUNCIL_PROTOCOL } from './agentProfileManager.js';
+import { AgentProfileManager, DEFAULT_COUNCIL_PROFILES, ProfileValidationError, COUNCIL_PROTOCOL } from '../agentProfileManager.js';
 
 suite('AgentProfileManager', () => {
 
