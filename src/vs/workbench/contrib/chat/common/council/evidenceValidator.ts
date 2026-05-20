@@ -3,13 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { IFileService, IFileContent } from '../../../../../../platform/files/common/files.js';
-import { IModelService } from '../../../../../../editor/common/services/model.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { IFileService } from '../../../../../platform/files/common/files.js';
+import { URI } from '../../../../../base/common/uri.js';
+import { CancellationToken } from '../../../../../base/common/cancellation.js';
 
 export const IEvidenceValidator = createDecorator<IEvidenceValidator>('evidenceValidator');
 
@@ -78,8 +77,7 @@ export class EvidenceValidator extends Disposable implements IEvidenceValidator 
 
 	constructor(
 		@ILogService private readonly logService: ILogService,
-		@IFileService private readonly fileService: IFileService,
-		@IModelService private readonly modelService: IModelService
+		@IFileService private readonly fileService: IFileService
 	) {
 		super();
 	}
@@ -138,7 +136,7 @@ export class EvidenceValidator extends Disposable implements IEvidenceValidator 
 			}
 		];
 
-		for (const { regex, type, parser } of patterns) {
+		for (const { regex, parser } of patterns) {
 			let match;
 			while ((match = regex.exec(text)) !== null) {
 				try {

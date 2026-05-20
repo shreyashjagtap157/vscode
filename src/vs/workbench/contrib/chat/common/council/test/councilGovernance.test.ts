@@ -4,25 +4,25 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { CouncilGovernance, GovernanceActionType, GovernanceSeverity, GovernancePolicy } from '../councilGovernance.js';
+import { CouncilGovernance, GovernanceActionType, GovernanceSeverity } from '../councilGovernance.js';
 
 class MockStorageService {
-	private readonly store: Map<string, string>;
+	private readonly data: Map<string, string>;
 
 	constructor() {
-		this.store = new Map();
+		this.data = new Map();
 	}
 
 	get(key: string, scope: unknown, fallback: string): string {
-		return this.store.get(key) ?? fallback;
+		return this.data.get(key) ?? fallback;
 	}
 
-	store(key: string, value: string, scope: unknown, target: unknown): void {
-		this.store.set(key, value);
+	set(key: string, value: string): void {
+		this.data.set(key, value);
 	}
 
 	remove(key: string, scope: unknown): void {
-		this.store.delete(key);
+		this.data.delete(key);
 	}
 }
 

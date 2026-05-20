@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
 import { CouncilAgentProfile } from './agentProfileManager.js';
 import { EvidenceScore, IEvidenceValidator } from './evidenceValidator.js';
 
@@ -81,8 +81,8 @@ export class AdvancedConsensusEngine extends Disposable implements IAdvancedCons
 	declare readonly _serviceBrand: undefined;
 
 	constructor(
-		@ILogService private readonly logService: ILogService,
-		@IEvidenceValidator private readonly evidenceValidator: IEvidenceValidator
+		@ILogService _logService: ILogService,
+		@IEvidenceValidator _evidenceValidator: IEvidenceValidator
 	) {
 		super();
 	}
@@ -244,15 +244,13 @@ export class AdvancedConsensusEngine extends Disposable implements IAdvancedCons
 	private async resolveEvidenceWeightedCI(
 		scoredContributions: ScoredContribution[]
 	): Promise<ConsensusResult> {
-		sortedContributions.sort((a, b) => b.weightedScore - a.weightedScore);
+		scoredContributions.sort((a, b) => b.weightedScore - a.weightedScore);
 
 		const winner = scoredContributions[0];
 		const dissenters = scoredContributions.slice(1).map(c => c.roleId);
 
 		const outlierIndices = this.detectOutliers(scoredContributions.map(c => c.weightedScore));
 		const hasOutliers = outlierIndices.length > 0;
-
-		const agreementLevel = this.calculateAgreementLevel(scoredContributions);
 
 		const rationale = hasOutliers
 			? `Evidence-weighted consensus with outliers detected. Winner: ${winner.roleId} (score: ${winner.weightedScore.toFixed(2)}, CI: [${winner.confidenceInterval.lower.toFixed(2)}, ${winner.confidenceInterval.upper.toFixed(2)}]). Outliers: ${outlierIndices.map(i => scoredContributions[i].roleId).join(', ')}`

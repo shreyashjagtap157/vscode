@@ -3,25 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken, CancellationTokenSource } from '../../../../../../base/common/cancellation.js';
-import { DeferredPromise, raceTimeout } from '../../../../../../base/common/async.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { IAgentProfileManager, CouncilAgentProfile, COUNCIL_PROTOCOL } from './agentProfileManager.js';
-import { ILanguageModelsService, ILanguageModelChatMetadata } from '../languageModels.js';
-import { ILanguageModelToolsService, IToolResult } from '../tools/languageModelToolsService.js';
-import { IChatService, IChatProgress, IChatProgressMessage, ChatMessageType } from '../chatService/chatService.js';
-import { ChatAgentLocation } from '../constants.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
+import { CancellationToken, CancellationTokenSource } from '../../../../../base/common/cancellation.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { IAgentProfileManager, CouncilAgentProfile } from './agentProfileManager.js';
+import { ILanguageModelsService, ChatMessageRole, IChatMessage } from '../languageModels.js';
+import { ILanguageModelToolsService } from '../tools/languageModelToolsService.js';
+import { IChatService } from '../chatService/chatService.js';
+import { generateUuid } from '../../../../../base/common/uuid.js';
 
 export const ICouncilOrchestrator = createDecorator<ICouncilOrchestrator>('councilOrchestrator');
 
 export interface CouncilTask {
-	readonly taskId: string;
-	readonly description: string;
-	readonly assignedRole: string;
-	readonly dependencies: string[];
+	taskId: string;
+	description: string;
+	assignedRole: string;
+	dependencies: string[];
 	status: 'pending' | 'in_progress' | 'completed' | 'failed';
 	result?: string;
 	error?: string;
@@ -84,8 +82,8 @@ export class CouncilOrchestrator extends Disposable implements ICouncilOrchestra
 	constructor(
 		@IAgentProfileManager private readonly profileManager: IAgentProfileManager,
 		@ILanguageModelsService private readonly languageModelsService: ILanguageModelsService,
-		@ILanguageModelToolsService private readonly languageModelToolsService: ILanguageModelToolsService,
-		@IChatService private readonly chatService: IChatService,
+		@ILanguageModelToolsService _languageModelToolsService: ILanguageModelToolsService,
+		@IChatService _chatService: IChatService,
 		@ILogService private readonly logService: ILogService
 	) {
 		super();
@@ -100,9 +98,10 @@ export class CouncilOrchestrator extends Disposable implements ICouncilOrchestra
 	): Promise<CouncilResult> {
 		const sessionId = generateUuid();
 		const cts = new CancellationTokenSource();
+		const parentListener = token.onCancellationRequested(() => cts.cancel());
 		this.cancellationTokens.set(sessionId, cts);
 
-		const linkedToken = CancellationToken.any(token, cts.token);
+		const linkedToken = cts.token;
 
 		try {
 			this.logService.info(`[Council] Starting session ${sessionId} for request: ${request.substring(0, 100)}...`);
@@ -149,13 +148,14 @@ export class CouncilOrchestrator extends Disposable implements ICouncilOrchestra
 			this.logService.error(`[Council] Session ${sessionId} failed: ${error}`);
 			throw error;
 		} finally {
+			parentListener.dispose();
 			this.cancellationTokens.delete(sessionId);
 		}
 	}
 
 	private async decomposeRequest(
 		request: string,
-		selectedRoles?: string[],
+		selectedRoles: string[] | undefined,
 		token: CancellationToken
 	): Promise<TaskDecomposition> {
 		const availableProfiles = selectedRoles
@@ -205,15 +205,23 @@ Output ONLY valid JSON, no markdown formatting.`;
 
 			const response = await this.languageModelsService.sendChatRequest(
 				model,
-				'copilot',
-				[{ role: 'user', content: planningPrompt }],
+				undefined,
+				[{ role: ChatMessageRole.User, content: [{ type: 'text', value: planningPrompt }] }],
 				{},
-				{ token }
+				token
 			);
 
 			let responseText = '';
 			for await (const chunk of response.stream) {
-				responseText += chunk.text || '';
+				if (Array.isArray(chunk)) {
+					for (const part of chunk) {
+						if (part.type === 'text') {
+							responseText += part.value;
+						}
+					}
+				} else if (chunk.type === 'text') {
+					responseText += chunk.value;
+				}
 			}
 
 			const parsed = this.parseTaskDecomposition(responseText, availableProfiles);
@@ -407,26 +415,34 @@ Output ONLY valid JSON, no markdown formatting.`;
 
 		this.logService.debug(`[Council] Invoking sub-agent ${profile.roleId} with model ${modelId}`);
 
-		const messages = [
-			{ role: 'system' as const, content: systemPrompt },
-			{ role: 'user' as const, content: taskDescription }
+		const messages: IChatMessage[] = [
+			{ role: ChatMessageRole.System, content: [{ type: 'text', value: systemPrompt }] },
+			{ role: ChatMessageRole.User, content: [{ type: 'text', value: taskDescription }] }
 		];
 
 		const response = await this.languageModelsService.sendChatRequest(
 			modelId,
-			'copilot',
+			undefined,
 			messages,
 			{
 				max_tokens: profile.maxTokens || 4000,
 				temperature: profile.temperature ?? 0.7
 			},
-			{ token }
+			token
 		);
 
 		let result = '';
 		for await (const chunk of response.stream) {
 			if (token.isCancellationRequested) break;
-			result += chunk.text || '';
+			if (Array.isArray(chunk)) {
+				for (const part of chunk) {
+					if (part.type === 'text') {
+						result += part.value;
+					}
+				}
+			} else if (chunk.type === 'text') {
+				result += chunk.value;
+			}
 		}
 
 		return result || `[${profile.displayName}] Task completed (no output)`;
@@ -445,7 +461,6 @@ Output ONLY valid JSON, no markdown formatting.`;
 
 	private synthesizeResult(session: CouncilSession): CouncilResult {
 		const contributions = Array.from(session.contributions.entries());
-		const successfulTasks = session.activeTaskGraph.filter(t => t.status === 'completed');
 		const failedTasks = session.activeTaskGraph.filter(t => t.status === 'failed');
 
 		const synthesisPrompt = `You are the Council Coordinator. Synthesize the following agent contributions into a coherent, comprehensive response to the original request.

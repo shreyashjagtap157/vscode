@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IConfigurationRegistry, Extensions as ConfigurationExtensions } from '../../../../../../platform/configuration/common/configurationRegistry.js';
-import { Registry } from '../../../../../../platform/registry/common/platform.js';
-import { localize } from '../../../../../../nls.js';
+import { IConfigurationRegistry, Extensions as ConfigurationExtensions } from '../../../../../platform/configuration/common/configurationRegistry.js';
+import { Registry } from '../../../../../platform/registry/common/platform.js';
+import { localize } from '../../../../../nls.js';
 
 export const COUNCIL_CONFIGURATION = {
 	Enabled: 'chat.council.enabled',

@@ -3,22 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { Codicon } from '../../../../../../base/common/codicons.js';
-import { MarkdownString } from '../../../../../../base/common/htmlContent.js';
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../../../../base/common/themables.js';
-import { localize } from '../../../../../../nls.js';
-import { ExtensionIdentifier } from '../../../../../../platform/extensions/common/extensions.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
+import { CancellationToken } from '../../../../../base/common/cancellation.js';
+import { Codicon } from '../../../../../base/common/codicons.js';
+import { MarkdownString } from '../../../../../base/common/htmlContent.js';
+import { Disposable, IDisposable, toDisposable } from '../../../../../base/common/lifecycle.js';
+import { localize } from '../../../../../nls.js';
+import { ExtensionIdentifier } from '../../../../../platform/extensions/common/extensions.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
 import { ChatAgentLocation, ChatModeKind } from '../constants.js';
-import { IChatAgentData, IChatAgentResult, IChatAgentService, IChatAgentImplementation, IChatAgentRequest, IChatProgress, IChatProgressMessage, ChatMessageType } from '../participants/chatAgents.js';
+import { IChatAgentData, IChatAgentResult, IChatAgentService, IChatAgentImplementation, IChatAgentRequest, IChatAgentHistoryEntry } from '../participants/chatAgents.js';
+import { IChatProgress } from '../chatService/chatService.js';
 import { ICouncilOrchestrator, CouncilResult } from './councilOrchestrator.js';
 import { IAgentProfileManager } from './agentProfileManager.js';
-import { IConsensusManager, ConsensusStrategy } from './councilCoordinator.js';
-import { IEvidenceValidator } from './evidenceValidator.js';
-import { IAdvancedConsensusEngine } from './advancedConsensusEngine.js';
+import { ConsensusStrategy } from './councilCoordinator.js';
 import { IDebateResolver } from './debateResolver.js';
 import { ICouncilTestRunner } from './councilTestRunner.js';
 
@@ -31,16 +28,12 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 
 	static readonly Id = COUNCIL_PARTICIPANT_ID;
 
-	private readonly participantRegistration: Disposable;
+	private readonly participantRegistration: IDisposable;
 
 	constructor(
-		@IInstantiationService private readonly instantiationService: IInstantiationService,
 		@IChatAgentService private readonly chatAgentService: IChatAgentService,
 		@ICouncilOrchestrator private readonly councilOrchestrator: ICouncilOrchestrator,
 		@IAgentProfileManager private readonly profileManager: IAgentProfileManager,
-		@IConsensusManager private readonly consensusManager: IConsensusManager,
-		@IEvidenceValidator private readonly evidenceValidator: IEvidenceValidator,
-		@IAdvancedConsensusEngine private readonly consensusEngine: IAdvancedConsensusEngine,
 		@IDebateResolver private readonly debateResolver: IDebateResolver,
 		@ICouncilTestRunner private readonly testRunner: ICouncilTestRunner,
 		@ILogService private readonly logService: ILogService
@@ -50,15 +43,14 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 		this._register(this.participantRegistration);
 	}
 
-	private registerParticipant(): Disposable {
+	private registerParticipant(): IDisposable {
 		const participantData: IChatAgentData = {
 			id: CouncilChatParticipant.Id,
 			name: COUNCIL_PARTICIPANT_NAME,
 			fullName: localize('council.fullName', 'Agent Council'),
 			description: localize('council.description', 'Orchestrate multiple specialized agents to collaborate on complex tasks'),
 			isDefault: false,
-			isCoreParticipant: true,
-			locations: [ChatAgentLocation.Panel, ChatAgentLocation.Editor, ChatAgentLocation.Terminal],
+			locations: [ChatAgentLocation.Chat, ChatAgentLocation.EditorInline, ChatAgentLocation.Terminal],
 			modes: [ChatModeKind.Ask, ChatModeKind.Agent, ChatModeKind.Edit],
 			slashCommands: [
 				{ name: 'plan', description: 'Plan a multi-agent workflow' },
@@ -71,7 +63,7 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 			disambiguation: [],
 			metadata: {
 				themeIcon: Codicon.organization,
-				sampleRequest: { message: 'Review this architecture for security and performance', kind: ChatModeKind.Agent }
+				sampleRequest: 'Review this architecture for security and performance'
 			},
 			extensionId: COUNCIL_EXTENSION_ID,
 			extensionVersion: '1.0.0',
@@ -79,29 +71,27 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 			extensionDisplayName: 'VS Code Council'
 		};
 
-		const dataRegistration = this.chatAgentService.registerAgent(participantData);
+		const dataRegistration = this.chatAgentService.registerAgent(participantData.id, participantData);
 		const implRegistration = this.chatAgentService.registerAgentImplementation(participantData.id, this);
 
 		this.logService.info('[Council] Participant registered with ID: ' + participantData.id);
 		this.logService.info('[Council] Available in locations: ' + participantData.locations.join(', '));
 		this.logService.info('[Council] Available modes: ' + participantData.modes.join(', '));
 
-		return {
-			dispose: () => {
-				dataRegistration.dispose();
-				implRegistration.dispose();
-			}
-		};
+		return toDisposable(() => {
+			dataRegistration.dispose();
+			implRegistration.dispose();
+		});
 	}
 
-	async invoke(request: IChatAgentRequest, progress: (part: IChatProgress) => void, history: any[], token: CancellationToken): Promise<IChatAgentResult> {
+	async invoke(request: IChatAgentRequest, progress: (parts: IChatProgress[]) => void, history: IChatAgentHistoryEntry[], token: CancellationToken): Promise<IChatAgentResult> {
 		this.logService.info(`[Council] Invoking with request: ${request.message.substring(0, 100)}...`);
 
 		try {
-			progress({
-				kind: ChatMessageType.MarkdownContent,
+			progress([{
+				kind: 'markdownContent',
 				content: new MarkdownString('**Agent Council** is analyzing your request...\n\n')
-			});
+			}]);
 
 			const slashCommand = this.extractSlashCommand(request.message);
 			if (slashCommand) {
@@ -111,10 +101,10 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 			const selectedRoles = this.extractRolesFromRequest(request.message);
 			const strategy = this.extractStrategyFromRequest(request.message);
 
-			progress({
-				kind: ChatMessageType.MarkdownContent,
+			progress([{
+				kind: 'markdownContent',
 				content: new MarkdownString(this.buildCouncilStatusMessage(selectedRoles, strategy))
-			});
+			}]);
 
 			const result = await this.councilOrchestrator.executeSession(
 				request.message,
@@ -125,24 +115,22 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 			this.renderCouncilResult(result, progress);
 
 			return {
-				errorDetails: undefined,
-				errorCode: undefined
+				errorDetails: undefined
 			};
 		} catch (error) {
 			this.logService.error(`[Council] Invocation failed: ${error}`);
-			progress({
-				kind: ChatMessageType.MarkdownContent,
+			progress([{
+				kind: 'markdownContent',
 				content: new MarkdownString(`**Council Error:** ${error instanceof Error ? error.message : String(error)}`)
-			});
+			}]);
 
 			return {
-				errorDetails: { message: error instanceof Error ? error.message : String(error) },
-				errorCode: 'council_invocation_failed'
+				errorDetails: { message: error instanceof Error ? error.message : String(error) }
 			};
 		}
 	}
 
-	private async handleSlashCommand(command: string, request: IChatAgentRequest, progress: (part: IChatProgress) => void, token: CancellationToken): Promise<IChatAgentResult> {
+	private async handleSlashCommand(command: string, request: IChatAgentRequest, progress: (parts: IChatProgress[]) => void, token: CancellationToken): Promise<IChatAgentResult> {
 		switch (command) {
 			case 'plan':
 				return this.handlePlanCommand(request, progress, token);
@@ -161,11 +149,11 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 		}
 	}
 
-	private async handlePlanCommand(request: IChatAgentRequest, progress: (part: IChatProgress) => void, token: CancellationToken): Promise<IChatAgentResult> {
-		progress({
-			kind: ChatMessageType.MarkdownContent,
+	private async handlePlanCommand(request: IChatAgentRequest, progress: (parts: IChatProgress[]) => void, token: CancellationToken): Promise<IChatAgentResult> {
+		progress([{
+			kind: 'markdownContent',
 			content: new MarkdownString('**Planning Phase** - Architect and Backend agents collaborating...\n\n')
-		});
+		}]);
 
 		const result = await this.councilOrchestrator.executeSession(
 			`Create a detailed implementation plan for: ${request.message}`,
@@ -174,14 +162,14 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 		);
 
 		this.renderCouncilResult(result, progress);
-		return { errorDetails: undefined, errorCode: undefined };
+		return { errorDetails: undefined };
 	}
 
-	private async handleReviewCommand(request: IChatAgentRequest, progress: (part: IChatProgress) => void, token: CancellationToken): Promise<IChatAgentResult> {
-		progress({
-			kind: ChatMessageType.MarkdownContent,
+	private async handleReviewCommand(request: IChatAgentRequest, progress: (parts: IChatProgress[]) => void, token: CancellationToken): Promise<IChatAgentResult> {
+		progress([{
+			kind: 'markdownContent',
 			content: new MarkdownString('**Code Review** - Multiple specialists reviewing...\n\n')
-		});
+		}]);
 
 		const result = await this.councilOrchestrator.executeSession(
 			`Review the following code for quality, security, and performance: ${request.message}`,
@@ -190,14 +178,14 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 		);
 
 		this.renderCouncilResult(result, progress);
-		return { errorDetails: undefined, errorCode: undefined };
+		return { errorDetails: undefined };
 	}
 
-	private async handleArchitectCommand(request: IChatAgentRequest, progress: (part: IChatProgress) => void, token: CancellationToken): Promise<IChatAgentResult> {
-		progress({
-			kind: ChatMessageType.MarkdownContent,
+	private async handleArchitectCommand(request: IChatAgentRequest, progress: (parts: IChatProgress[]) => void, token: CancellationToken): Promise<IChatAgentResult> {
+		progress([{
+			kind: 'markdownContent',
 			content: new MarkdownString('**Architecture Discussion** - Council deliberating...\n\n')
-		});
+		}]);
 
 		const result = await this.councilOrchestrator.executeSession(
 			`Discuss architecture for: ${request.message}`,
@@ -206,14 +194,14 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 		);
 
 		this.renderCouncilResult(result, progress);
-		return { errorDetails: undefined, errorCode: undefined };
+		return { errorDetails: undefined };
 	}
 
-	private async handleSecurityCommand(request: IChatAgentRequest, progress: (part: IChatProgress) => void, token: CancellationToken): Promise<IChatAgentResult> {
-		progress({
-			kind: ChatMessageType.MarkdownContent,
+	private async handleSecurityCommand(request: IChatAgentRequest, progress: (parts: IChatProgress[]) => void, token: CancellationToken): Promise<IChatAgentResult> {
+		progress([{
+			kind: 'markdownContent',
 			content: new MarkdownString('**Security Audit** - Security specialist analyzing...\n\n')
-		});
+		}]);
 
 		const result = await this.councilOrchestrator.executeSession(
 			`Perform security audit for: ${request.message}`,
@@ -222,46 +210,46 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 		);
 
 		this.renderCouncilResult(result, progress);
-		return { errorDetails: undefined, errorCode: undefined };
+		return { errorDetails: undefined };
 	}
 
-	private async handleTestCommand(request: IChatAgentRequest, progress: (part: IChatProgress) => void, token: CancellationToken): Promise<IChatAgentResult> {
+	private async handleTestCommand(request: IChatAgentRequest, progress: (parts: IChatProgress[]) => void, token: CancellationToken): Promise<IChatAgentResult> {
 		const commands = this.testRunner.extractTestCommands(request.message);
 		
 		if (commands.length === 0) {
-			progress({
-				kind: ChatMessageType.MarkdownContent,
+			progress([{
+				kind: 'markdownContent',
 				content: new MarkdownString('**Test Runner** - No test commands found in request.\n\nInclude test commands like `npm test`, `jest`, or `pytest` to verify claims.')
-			});
-			return { errorDetails: undefined, errorCode: undefined };
+			}]);
+			return { errorDetails: undefined };
 		}
 
-		progress({
-			kind: ChatMessageType.MarkdownContent,
+		progress([{
+			kind: 'markdownContent',
 			content: new MarkdownString(`**Test Runner** - Executing ${commands.length} test command(s)...\n\n`)
-		});
+		}]);
 
 		const suite = await this.testRunner.runTests(commands, token);
 		
 		const summary = `## Test Results\n\n- **Total:** ${suite.totalTests}\n- **Passed:** ${suite.passedTests}\n- **Failed:** ${suite.failedTests}\n- **Duration:** ${(suite.duration / 1000).toFixed(1)}s`;
 		
-		progress({
-			kind: ChatMessageType.MarkdownContent,
+		progress([{
+			kind: 'markdownContent',
 			content: new MarkdownString(summary)
-		});
+		}]);
 
-		return { errorDetails: undefined, errorCode: undefined };
+		return { errorDetails: undefined };
 	}
 
-	private async handleDebateCommand(request: IChatAgentRequest, progress: (part: IChatProgress) => void, token: CancellationToken): Promise<IChatAgentResult> {
+	private async handleDebateCommand(request: IChatAgentRequest, progress: (parts: IChatProgress[]) => void, token: CancellationToken): Promise<IChatAgentResult> {
 		const debates = this.debateResolver.getDebateHistory();
 		
 		if (debates.length === 0) {
-			progress({
-				kind: ChatMessageType.MarkdownContent,
+			progress([{
+				kind: 'markdownContent',
 				content: new MarkdownString('**Debate History** - No debates recorded yet.\n\nDebates are automatically detected when agents disagree during council sessions.')
-			});
-			return { errorDetails: undefined, errorCode: undefined };
+			}]);
+			return { errorDetails: undefined };
 		}
 
 		let debateContent = '## Debate History\n\n';
@@ -281,12 +269,12 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 			debateContent += '---\n\n';
 		}
 
-		progress({
-			kind: ChatMessageType.MarkdownContent,
+		progress([{
+			kind: 'markdownContent',
 			content: new MarkdownString(debateContent)
-		});
+		}]);
 
-		return { errorDetails: undefined, errorCode: undefined };
+		return { errorDetails: undefined };
 	}
 
 	private extractSlashCommand(message: string): string | undefined {
@@ -306,11 +294,11 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 		const strategyMatch = message.match(/--strategy\s+(\w+)/i);
 		if (strategyMatch) {
 			const strategy = strategyMatch[1].toLowerCase();
-			if (['majority', 'specialist-priority', 'evidence-weighted', 'coordinator-override', 'bayesian', 'evidence-weighted-ci'].includes(strategy)) {
+			if (['majority', 'specialist-priority', 'evidence-weighted', 'coordinator-override', 'bayesian'].includes(strategy)) {
 				return strategy as ConsensusStrategy;
 			}
 		}
-		return 'evidence-weighted-ci';
+		return 'evidence-weighted';
 	}
 
 	private buildCouncilStatusMessage(selectedRoles?: string[], strategy?: ConsensusStrategy): string {
@@ -323,10 +311,10 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 			}
 		});
 
-		return `**Council Configuration:**\n- **Agents:** ${profiles.map(p => p.displayName).join(', ')}\n- **Strategy:** ${strategy || 'evidence-weighted-ci'}\n\n`;
+		return `**Council Configuration:**\n- **Agents:** ${profiles.map(p => p.displayName).join(', ')}\n- **Strategy:** ${strategy || 'evidence-weighted'}\n\n`;
 	}
 
-	private renderCouncilResult(result: CouncilResult, progress: (part: IChatProgress) => void): void {
+	private renderCouncilResult(result: CouncilResult, progress: (parts: IChatProgress[]) => void): void {
 		let response = `## Council Result (Session: ${result.sessionId})\n\n`;
 		response += `**Confidence:** ${(result.confidence * 100).toFixed(0)}% | **Execution Time:** ${(result.executionTimeMs / 1000).toFixed(1)}s | **Status:** ${result.status}\n\n`;
 
@@ -361,23 +349,15 @@ export class CouncilChatParticipant extends Disposable implements IChatAgentImpl
 		response += '## Final Synthesis\n\n';
 		response += result.finalResponse;
 
-		progress({
-			kind: ChatMessageType.MarkdownContent,
+		progress([{
+			kind: 'markdownContent',
 			content: new MarkdownString(response)
-		});
+		}]);
 	}
 
 	async provideSuggestions(request: IChatAgentRequest, token: CancellationToken): Promise<IChatAgentResult> {
-		const profiles = this.profileManager.getAllProfiles();
-		const suggestions = profiles.map(p => ({
-			role: p.roleId,
-			displayName: p.displayName,
-			focusModes: p.focusModes
-		}));
-
 		return {
-			errorDetails: undefined,
-			errorCode: undefined
+			errorDetails: undefined
 		};
 	}
 }

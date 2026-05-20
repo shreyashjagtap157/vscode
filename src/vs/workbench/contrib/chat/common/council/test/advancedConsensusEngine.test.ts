@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { AdvancedConsensusEngine, ConsensusStrategy } from '../advancedConsensusEngine.js';
+import { AdvancedConsensusEngine } from '../advancedConsensusEngine.js';
 
 suite('AdvancedConsensusEngine - Phase 2', () => {
 

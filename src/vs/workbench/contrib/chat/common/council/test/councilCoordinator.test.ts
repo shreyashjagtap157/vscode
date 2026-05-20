@@ -5,6 +5,7 @@
 
 import assert from 'assert';
 import { ConsensusManager, IterationGuard } from '../councilCoordinator.js';
+import { CouncilAgentProfile } from '../agentProfileManager.js';
 
 suite('ConsensusManager', () => {
 
@@ -33,9 +34,9 @@ suite('ConsensusManager', () => {
 			{ roleId: 'architect', content: 'Use pattern A', timestamp: Date.now() },
 			{ roleId: 'security', content: 'Pattern A has vulnerability [File:auth.ts:12]', timestamp: Date.now() }
 		];
-		const profiles = new Map([
-			['architect', { roleId: 'architect', priorityWeight: 10, focusModes: ['architecture'] }],
-			['security', { roleId: 'security', priorityWeight: 12, focusModes: ['security'] }]
+		const profiles = new Map<string, CouncilAgentProfile>([
+			['architect', { roleId: 'architect', displayName: 'Architect', baseSystemPrompt: '', reasoningStyle: 'pragmatic', priorityWeight: 10, preferredTools: [], focusModes: ['architecture'] }],
+			['security', { roleId: 'security', displayName: 'Security', baseSystemPrompt: '', reasoningStyle: 'critical', priorityWeight: 12, preferredTools: [], focusModes: ['security'] }]
 		]);
 
 		const result = await manager.resolveConsensus(contributions, profiles, 'evidence-weighted');

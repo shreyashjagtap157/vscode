@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { Emitter, Event } from '../../../../../../base/common/event.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { ILanguageModelsService } from '../../languageModels.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { Emitter, Event } from '../../../../../base/common/event.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { CancellationToken } from '../../../../../base/common/cancellation.js';
+import { ILanguageModelsService, ChatMessageRole } from '../languageModels.js';
 import { CouncilAgentProfile } from './agentProfileManager.js';
 import { EvidenceScore } from './evidenceValidator.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
+import { generateUuid } from '../../../../../base/common/uuid.js';
 
 export const IDebateResolver = createDecorator<IDebateResolver>('debateResolver');
 
@@ -163,15 +163,23 @@ Output JSON:
 
 			const response = await this.languageModelsService.sendChatRequest(
 				modelId,
-				'copilot',
-				[{ role: 'user', content: analysisPrompt }],
+				undefined,
+				[{ role: ChatMessageRole.User, content: [{ type: 'text', value: analysisPrompt }] }],
 				{},
-				{ token: CancellationToken.None }
+				CancellationToken.None
 			);
 
 			let responseText = '';
 			for await (const chunk of response.stream) {
-				responseText += chunk.text || '';
+				if (Array.isArray(chunk)) {
+					for (const part of chunk) {
+						if (part.type === 'text') {
+							responseText += part.value;
+						}
+					}
+				} else if (chunk.type === 'text') {
+					responseText += chunk.value;
+				}
 			}
 
 			const cleaned = responseText.replace(/```json\s*|\s*```/g, '').trim();
@@ -236,16 +244,24 @@ Provide your resolution in this JSON format:
 
 			const response = await this.languageModelsService.sendChatRequest(
 				modelId,
-				'copilot',
-				[{ role: 'user', content: resolutionPrompt }],
+				undefined,
+				[{ role: ChatMessageRole.User, content: [{ type: 'text', value: resolutionPrompt }] }],
 				{},
-				{ token }
+				token
 			);
 
 			let responseText = '';
 			for await (const chunk of response.stream) {
 				if (token.isCancellationRequested) break;
-				responseText += chunk.text || '';
+				if (Array.isArray(chunk)) {
+					for (const part of chunk) {
+						if (part.type === 'text') {
+							responseText += part.value;
+						}
+					}
+				} else if (chunk.type === 'text') {
+					responseText += chunk.value;
+				}
 			}
 
 			const cleaned = responseText.replace(/```json\s*|\s*```/g, '').trim();

@@ -138,11 +138,8 @@ function createTestValidator(): EvidenceValidator {
 		readFile: () => Promise.resolve({ value: { toString: () => '' } })
 	};
 
-	const mockModelService = {};
-
 	return new EvidenceValidator(
 		mockLogService as any,
-		mockFileService as any,
-		mockModelService as any
+		mockFileService as any
 	);
 }
