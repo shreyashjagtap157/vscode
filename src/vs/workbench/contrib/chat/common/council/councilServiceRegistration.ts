@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { registerSingleton } from '../../../../../../platform/instantiation/common/extensions.js';
-import { InstantiationType } from '../../../../../../platform/instantiation/common/instantiation.js';
+import { registerSingleton, InstantiationType } from '../../../../../platform/instantiation/common/extensions.js';
 import { IAgentProfileManager, AgentProfileManager } from './agentProfileManager.js';
 import { ICouncilOrchestrator, CouncilOrchestrator } from './councilOrchestrator.js';
-import { IConsensusManager, ConsensusManager, IterationGuard } from './councilCoordinator.js';
+import { IConsensusManager, ConsensusManager } from './councilCoordinator.js';
 import { IEvidenceValidator, EvidenceValidator } from './evidenceValidator.js';
 import { IAdvancedConsensusEngine, AdvancedConsensusEngine } from './advancedConsensusEngine.js';
 import { IDebateResolver, DebateResolver } from './debateResolver.js';

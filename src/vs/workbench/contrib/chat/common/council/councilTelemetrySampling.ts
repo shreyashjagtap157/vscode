@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
 import { ICouncilTelemetryService } from './councilTelemetryService.js';
 
 export const ICouncilTelemetrySampling = createDecorator<ICouncilTelemetrySampling>('councilTelemetrySampling');
@@ -37,8 +37,8 @@ export class CouncilTelemetrySampling extends Disposable implements ICouncilTele
 	private readonly eventTypeCounts: Map<string, { sent: number; dropped: number }>;
 
 	constructor(
-		@ILogService private readonly logService: ILogService,
-		@ICouncilTelemetryService private readonly telemetryService: ICouncilTelemetryService
+		@ILogService _logService: ILogService,
+		@ICouncilTelemetryService _telemetryService: ICouncilTelemetryService
 	) {
 		super();
 		this.config = {

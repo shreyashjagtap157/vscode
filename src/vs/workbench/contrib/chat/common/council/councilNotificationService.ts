@@ -3,10 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { INotificationService, Severity, NotificationPriority } from '../../../../../../platform/notification/common/notification.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
+import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { INotificationService, Severity, NotificationPriority, INotificationActions } from '../../../../../platform/notification/common/notification.js';
+import { ILogService } from '../../../../../platform/log/common/log.js';
+import { Action } from '../../../../../base/common/actions.js';
 
 export const ICouncilNotificationService = createDecorator<ICouncilNotificationService>('councilNotificationService');
 
@@ -65,16 +66,15 @@ export class CouncilNotificationService extends Disposable implements ICouncilNo
 
 		this.notifications.push(fullNotification);
 
-		const actions = notification.actions?.map(a => ({
-			label: a.label,
-			run: a.run
-		}));
+		const actions: INotificationActions | undefined = notification.actions?.length
+			? { primary: notification.actions.map(a => new Action(a.label, a.label, undefined, true, a.run)) }
+			: undefined;
 
 		this.notificationService.notify({
 			severity: notification.severity,
 			message: `${notification.title}: ${notification.message}`,
-			priority: NotificationPriority.NORMAL,
-			actions: actions?.length ? { primary: actions } : undefined
+			priority: NotificationPriority.DEFAULT,
+			actions
 		});
 
 		this.logService.info(`[Council Notification] ${notification.title}: ${notification.message}`);
