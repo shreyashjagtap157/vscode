@@ -4,11 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import './media/council.css';
-import { $, append, clearNode } from '../../../../../base/browser/dom.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
-import { IAgentProfileManager, CouncilAgentProfile } from '../../common/council/agentProfileManager.js';
+import { $, clearNode } from '../../../../../base/browser/dom.js';
+import { IAgentProfileManager } from '../../common/council/agentProfileManager.js';
 import { ICouncilOrchestrator, CouncilSession } from '../../common/council/councilOrchestrator.js';
 import { Codicon } from '../../../../../base/common/codicons.js';
 import { ThemeIcon } from '../../../../../base/common/themables.js';
@@ -18,7 +15,7 @@ export interface ICouncilWidgetOptions {
 	showProgress?: boolean;
 }
 
-export class CouncilSessionWidget extends Disposable {
+export class CouncilSessionWidget {
 	public readonly domNode: HTMLElement;
 	private readonly titleNode: HTMLElement;
 	private readonly statusNode: HTMLElement;
@@ -26,17 +23,12 @@ export class CouncilSessionWidget extends Disposable {
 	private readonly progressNode: HTMLElement;
 	private readonly debateNode: HTMLElement;
 
-	private readonly localStore = this._register(new DisposableStore());
-
 	constructor(
 		private readonly sessionId: string,
 		private readonly options: ICouncilWidgetOptions = {},
 		@IAgentProfileManager private readonly profileManager: IAgentProfileManager,
-		@ICouncilOrchestrator private readonly orchestrator: ICouncilOrchestrator,
-		@IThemeService private readonly themeService: IThemeService
+		@ICouncilOrchestrator private readonly orchestrator: ICouncilOrchestrator
 	) {
-		super();
-
 		this.domNode = $('.council-session-widget');
 		this.domNode.tabIndex = 0;
 

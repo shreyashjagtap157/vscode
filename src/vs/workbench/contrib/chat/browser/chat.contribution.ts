@@ -30,6 +30,7 @@ import { EditorPaneDescriptor, IEditorPaneRegistry } from '../../../browser/edit
 import { type ConfigurationKeyValuePairs, Extensions, IConfigurationMigrationRegistry } from '../../../common/configuration.js';
 import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
 import { IWorkbenchContribution, WorkbenchPhase, registerWorkbenchContribution2 } from '../../../common/contributions.js';
+import { ILifecycleService, LifecyclePhase } from '../../../services/lifecycle/common/lifecycle.js';
 import { EditorExtensions, IEditorFactoryRegistry } from '../../../common/editor.js';
 import { IWorkbenchAssignmentService } from '../../../services/assignment/common/assignmentService.js';
 import { ChatEntitlement, IChatEntitlementService } from '../../../services/chat/common/chatEntitlementService.js';
@@ -90,7 +91,7 @@ import { ICouncilPersonalityPersistence, CouncilPersonalityPersistence } from '.
 import { ICouncilBatchOperations, CouncilBatchOperations } from '../common/council/councilBatchOperations.js';
 import { ICouncilEnhancedOrchestrator, CouncilEnhancedOrchestrator } from '../common/council/councilEnhancedOrchestrator.js';
 import { CouncilChatParticipant } from '../common/council/councilParticipant.js';
-import { CouncilDashboardView, COUNCIL_DASHBOARD_VIEW_ID } from './councilDashboardView.js';
+import { LMStudioLanguageModelProvider } from './lmStudioLanguageModelProvider.js';
 import { AddConfigurationType, AssistedTypes } from '../../mcp/browser/mcpCommandsAddConfiguration.js';
 import { allDiscoverySources, discoverySourceSettingsLabel, McpCollisionBehavior, mcpDiscoverySection, mcpServerCollisionBehaviorSection, mcpServerSamplingSection } from '../../mcp/common/mcpConfiguration.js';
 import { ChatAgentNameService, ChatAgentService, IChatAgentNameService, IChatAgentService } from '../common/participants/chatAgents.js';
@@ -2782,21 +2783,62 @@ registerSingleton(ICouncilPersonalityPersistence, CouncilPersonalityPersistence,
 registerSingleton(ICouncilBatchOperations, CouncilBatchOperations, InstantiationType.Delayed);
 registerSingleton(ICouncilEnhancedOrchestrator, CouncilEnhancedOrchestrator, InstantiationType.Delayed);
 
-// Agent Council Dashboard View
-class CouncilDashboardViewContribution extends Disposable implements IWorkbenchContribution {
-	static readonly ID = 'workbench.contrib.councilDashboardView';
+// LM Studio Provider Contribution
+// Dynamically registers/unregisters based on LM Studio server availability
+class LMStudioProviderContribution extends Disposable implements IWorkbenchContribution {
+	static readonly ID = 'workbench.contrib.lmStudioProvider';
 
 	constructor(
-		@IInstantiationService instantiationService: IInstantiationService
+		@IInstantiationService instantiationService: IInstantiationService,
+		@ILanguageModelsService languageModelsService: ILanguageModelsService,
+		@ILifecycleService lifecycleService: ILifecycleService
 	) {
 		super();
-		this._register(instantiationService.createInstance(CouncilDashboardView, {
-			id: COUNCIL_DASHBOARD_VIEW_ID,
-			name: 'Agent Council Dashboard',
-			title: 'Agent Council'
-		} as any));
+
+		lifecycleService.when(LifecyclePhase.Restored).then(async () => {
+			const provider = instantiationService.createInstance(LMStudioLanguageModelProvider);
+			this._register(provider);
+
+			const vendorDescriptor = {
+				vendor: 'lmstudio',
+				displayName: 'LM Studio',
+				configuration: undefined,
+				managementCommand: undefined,
+				when: undefined
+			};
+
+			let isRegistered = false;
+
+			const updateVendorVisibility = () => {
+				if (provider.isConnected && !isRegistered) {
+					languageModelsService.deltaLanguageModelChatProviderDescriptors([vendorDescriptor], []);
+					isRegistered = true;
+				} else if (!provider.isConnected && isRegistered) {
+					languageModelsService.deltaLanguageModelChatProviderDescriptors([], [vendorDescriptor]);
+					isRegistered = false;
+				}
+			};
+
+			this._register(provider.onDidChange(() => {
+				updateVendorVisibility();
+			}));
+
+			this._register(languageModelsService.registerLanguageModelProvider('lmstudio', provider));
+
+			provider.refreshModels().catch(() => {
+				// Best effort - LM Studio may not be running
+			});
+
+			this._register({
+				dispose: () => {
+					if (isRegistered) {
+						languageModelsService.deltaLanguageModelChatProviderDescriptors([], [vendorDescriptor]);
+					}
+				}
+			});
+		});
 	}
 }
-registerWorkbenchContribution2(CouncilDashboardViewContribution.ID, CouncilDashboardViewContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(LMStudioProviderContribution.ID, LMStudioProviderContribution, WorkbenchPhase.AfterRestored);
 
 ChatWidget.CONTRIBS.push(ChatDynamicVariableModel);
